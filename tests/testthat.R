@@ -1,4 +1,4 @@
 library(testthat)
-library(laims.analysis)
+library(cardio.mri)
 
-test_check("laims.analysis")
+test_check("cardio.mri")

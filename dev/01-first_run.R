@@ -4,15 +4,20 @@
 ## - [ ] Change the name of `laims.analyses.Rproj` using your main
 ##       project's directory name accordingly. To do that,
 ##       simply run the following code
-proj_name <- basename(here::here())
+prj_name <- basename(here::here())
 fs::file_move(
   here::here("laims.analysis.Rproj"),  # old project's name
-  paste0(proj_name, ".Rproj")  # current project's name
+  paste0(prj_name, ".Rproj")  # current project's name
 )
 
 
-list.files(here::here(), pattern = "\\.([rR]|([rR]?md))$") |>
-  setdiff("01-FIRST_RUN.R") |>
+here::here() |>
+  list.files(
+    pattern = "\\.([rR]|([rR]?md))$",
+    recursive = TRUE,
+    all.files = TRUE
+  ) |>
+  setdiff(c("01-FIRST_RUN.R", ".Rprofile")) |>
   c("DESCRIPTION") |>
   purrr::walk(~{
     readLines(.x) |>

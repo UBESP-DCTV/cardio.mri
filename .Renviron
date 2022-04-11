@@ -2,9 +2,9 @@ _R_CHECK_LENGTH_1_CONDITION_="true"
 PATH="${RTOOLS40_HOME}\usr\bin;${PATH}"
 
 # Project's information: ONE SINGLE LINE EACH (no line brakes!!)
-PROJ_TITLE="Project's Title"
-PROJ_DESCRIPTION="Project's description."
-PROJ_URL="https://github.com/UBESP-DCTV/laims.analysis"
+PROJ_TITLE="ML cardiomyopaty (RM)"
+PROJ_DESCRIPTION="Cardiomiopathy analyses from structured data and magnetic resonance imaging through an integrated deep learning approach."
+PROJ_URL="https://github.com/UBESP-DCTV/cardio.mri"
 
 # Shared folders local locations
 PRJ_SHARED_PATH="",
