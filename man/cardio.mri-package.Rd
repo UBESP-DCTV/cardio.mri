@@ -4,11 +4,11 @@
 \name{cardio.mri-package}
 \alias{cardio.mri}
 \alias{cardio.mri-package}
-\title{cardio.mri: "ML Cardiomyopaty (RM)}
+\title{cardio.mri: "ML Cardiomyopathy (RM)}
 \description{
 \if{html}{\figure{logo.png}{options: align='right' alt='logo' width='120'}}
 
-Cardiomiopathy analyses from structured data and magnetic resonance imaging through an integrated deep learning approach.
+Cardiomyopathy analyses from structured data and magnetic resonance imaging through an integrated deep learning approach.
 }
 \author{
 \strong{Maintainer}: Corrado Lanera \email{corrado.lanera@ubep.unipd.it} (\href{https://orcid.org/0000-0002-0520-7428}{ORCID}) [copyright holder]

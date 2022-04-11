@@ -1,9 +1,9 @@
 
 # Project packages (TO BE UPDATED EVERY NEW PACKAGE USED) ----------
 
-prj_pkgs <- c("fs", "readr", "stringr", "purrr")
+prj_pkgs <- c()
 gh_prj_pkgs <- c()
-meta_pkgs <- c("tidymodels", "tidyverse")
+meta_pkgs <- c()
 
 renv::install(c(prj_pkgs, gh_prj_pkgs, meta_pkgs))
 
@@ -27,3 +27,8 @@ renv::status()
 
 # usethis::use_test("<my_fun>")
 # usethis::use_r(<"my_fun">)
+
+
+
+# Execute ---------------------------------------------------------
+rstudioapi::navigateToFile(here::here("dev/03-run_cycle.R"))
