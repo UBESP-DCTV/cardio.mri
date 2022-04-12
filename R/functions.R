@@ -3,7 +3,8 @@ get_info_from_filename <- function(filename) {
 
   component <- filename |>
     stringr::str_remove("\\.(avi|png)$") |>
-    stringr::str_split("-")
+    stringr::str_split("-") |>
+    unlist()
 
   if (!length(component) %in% c(3L, 5L)) {
     usethis::ui_stop(
@@ -16,7 +17,7 @@ get_info_from_filename <- function(filename) {
     component[["t_max"]] <- readr::parse_number(component[["t_max"]])
     component[["s_tot"]] <- readr::parse_number(component[["s_tot"]])
   } else  {
-    names(component) <- c("name", "channel", "type")
+    names(component) <- c("name", "ch", "type")
   }
 
   if (component[["type"]] == "lge") {
@@ -28,13 +29,9 @@ get_info_from_filename <- function(filename) {
     component[["s_tot"]] <- 1L
   }
 
-  list(
-    name = component[[1L]],
-    channel = channel,
-    type = type,
-    t_max = component[[4L]],
-    s_tot = component[[5L]]
-  )
+  stop("component must be a list")
+
+  component
 }
 
 read_mri <- function(mri_path) {

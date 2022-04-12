@@ -19,7 +19,7 @@ test_that("get_info_from_filename works", {
 
   # expectations
   expect_equal(info_ch1_cine[["name"]], "pinco_pallino")
-  expect_equal(info_ch1_cine[["channel"]], 1)
+  expect_equal(info_ch1_cine[["ch"]], 1)
   expect_equal(info_ch1_cine[["type"]], "cine")
   expect_equal(info_ch1_cine[["t_max"]], 25)
   expect_equal(info_ch1_cine[["s_tot"]], 14)
