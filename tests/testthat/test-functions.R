@@ -45,14 +45,72 @@ test_that("read_mri works on 2d (ch 2-3-4 / lge) images", {
 test_that("gray3draw_to_gray2dint works", {
   # setup
   original_matrix <- matrix(1:16, nrow = 4)
-  raw_matrix <- original_matrix |>
+  original_array <- array(original_matrix, dim = c(1, 4, 4))
+  raw_array <- original_array |>
     as.raw() |>
-    matrix(nrow = 4)
+    array(dim = c(1, 4, 4))
 
   # execution
-  back_to_int <- gray3draw_to_gray2dint(raw_matrix)
+  back_to_int <- gray3draw_to_gray2dint(raw_array)
 
   # expectation
-  expect_equal(back_to_int, original_matrix)
+  expect_equal(back_to_int, original_matrix, ignore_attr = TRUE)
+  expect_equal(dimnames(back_to_int), list(R = NULL, C = NULL))
 
+})
+
+
+test_that("read_mri works on 3d (ch 2-3-4 / cine) videos", {
+  # setup
+  correct_file <- file.path(
+    Sys.getenv("PRJ_SHARED_PATH"),
+    "Parziale con codici", "Parziale con codici",
+    "Bonato Renata", "bonato_renata-ch4-cine.avi"
+  )
+
+  # execution
+  imported_images <- read_mri(correct_file)
+
+  # expectation
+  expect_array(imported_images, d = 3)
+  expect_equal(dim(imported_images)[[3]], 26)
+  # expect_equal(
+  #   names(dimnames(imported_images)), c("R", "C", "T"))
+})
+
+
+test_that("read_mri works on 3d (ch 1 / lge) videos", {
+  # setup
+  correct_file <- file.path(
+    Sys.getenv("PRJ_SHARED_PATH"),
+    "Parziale con codici", "Parziale con codici",
+    "Bonato Renata", "bonato_renata-ch1-lge.avi"
+  )
+
+  # execution
+  imported_images <- read_mri(correct_file)
+
+  # expectation
+  expect_array(imported_images, d = 3)
+  expect_equal(dim(imported_images)[[3]], 10)
+  # expect_equal(names(dimnames(imported_images)), c("R", "C", "S"))
+})
+
+
+
+test_that("read_mri works on 4d (ch 1 / cine) videos", {
+  # setup
+  correct_file <- file.path(
+    Sys.getenv("PRJ_SHARED_PATH"),
+    "Parziale con codici", "Parziale con codici",
+    "Bonato Renata", "casarin_giuseppe-ch1-cine-t25-s11.avi"
+  )
+
+  # execution
+  imported_images <- read_mri(correct_file)
+
+  # expectation
+  expect_array(imported_images, d = 4)
+  expect_equal(dim(imported_images)[[3]], 10)
+  # expect_equal(names(dimnames(imported_images)), c("R", "C", "S"))
 })

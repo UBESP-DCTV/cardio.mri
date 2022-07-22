@@ -18,3 +18,4 @@
 ^01-FIRST_RUN.R$
 ^dev$
 ^run.R$
+^_targets.yaml$

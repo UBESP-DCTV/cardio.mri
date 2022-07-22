@@ -145,6 +145,14 @@
         "scales"
       ]
     },
+    "abind": {
+      "Package": "abind",
+      "Version": "1.4-5",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "4f57884290cc75ab22f4af9e9d4ca862",
+      "Requirements": []
+    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.1",
@@ -179,6 +187,14 @@
         "rstudioapi",
         "testthat"
       ]
+    },
+    "av": {
+      "Package": "av",
+      "Version": "0.7.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "466fd3aca5fa81e91a6c5d14e6deee8e",
+      "Requirements": []
     },
     "backports": {
       "Package": "backports",

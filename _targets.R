@@ -14,7 +14,12 @@ list(
   tar_files(
     patientsFolders,
     list.dirs(get_input_data_path(), recursive = FALSE)
-  ),
+(
+    mris,
+    read_mri(patientsMrisPaths),
+    pattern = map(patientsMrisPaths),
+    iteration = "list"
+  )  ),
 
   tar_target(
     patientsMrisPaths,
@@ -27,12 +32,7 @@ list(
     format = "file"
   ),
 
-  tar_target(
-    mris,
-    read_mri(patientsMrisPaths),
-    pattern = map(patientsMrisPaths),
-    iteration = "list"
-  )
+  tar_target
 
   # compile your report
   # tar_render(report, here::here("reports/report.Rmd"))
