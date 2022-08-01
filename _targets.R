@@ -14,39 +14,39 @@ list(
   tar_files(
     patientsFolders,
     list.dirs(get_input_data_path(), recursive = FALSE)
-(
-    mris,
-    read_mri(patientsMrisPaths),
-    pattern = map(patientsMrisPaths),
-    iteration = "list"
-  )  ),
+  ),
 
   tar_target(
     patientsMrisPaths,
-    list.files(
+    normalizePath(list.files(
       patientsFolders,
       pattern = "\\.(png|avi)",
       full.names = TRUE
-    ),
+    )),
     pattern = map(patientsFolders),
     format = "file"
   ),
 
-  tar_target
+  tar_target(
+    mris,
+    purrr::map(patientsMrisPaths, read_mri),
+    pattern = map(patientsMrisPaths),
+    iteration = "list"
+  ),
 
   # compile your report
-  # tar_render(report, here::here("reports/report.Rmd"))
+  tar_render(report, here::here("reports/report.Rmd")),
 
 
   # Decide what to share with other, and do it in a standard RDS format
-  # tar_target(
-  #   objectToShare,
-  #   list()
-  # ),
-  # tar_target(
-  #   shareOutput,
-  #   share_objects(objectToShare),
-  #   format = "file",
-  #   pattern = map(objectToShare)
-  # )
+  tar_target(
+    objectToShare,
+    list(mris = mris)
+  ),
+  tar_target(
+    shareOutput,
+    share_objects(objectToShare),
+    format = "file",
+    pattern = map(objectToShare)
+  )
 )

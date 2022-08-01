@@ -20,3 +20,7 @@ list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
 #
 # dim(train_images) # NxLxH
 # dim(train_labels) # N
+
+ex1 <- tar_read(patientsMrisPaths)[[1]]
+str(read_mri(ex1), 1L)
+

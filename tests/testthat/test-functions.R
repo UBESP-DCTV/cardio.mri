@@ -30,7 +30,7 @@ test_that("read_mri works on 2d (ch 2-3-4 / lge) images", {
   # setup
   correct_file <- file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
-    "Parziale con codici", "Parziale con codici",
+    "data-raw", "2022-08-01_mri",
     "Bonato Renata", "bonato_renata-ch4-lge.png"
   )
 
@@ -55,7 +55,7 @@ test_that("gray3draw_to_gray2dint works", {
 
   # expectation
   expect_equal(back_to_int, original_matrix, ignore_attr = TRUE)
-  expect_equal(dimnames(back_to_int), list(R = NULL, C = NULL))
+  expect_equal(dimnames(back_to_int), list(row = NULL, col = NULL))
 
 })
 
@@ -64,7 +64,7 @@ test_that("read_mri works on 3d (ch 2-3-4 / cine) videos", {
   # setup
   correct_file <- file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
-    "Parziale con codici", "Parziale con codici",
+    "data-raw", "2022-08-01_mri",
     "Bonato Renata", "bonato_renata-ch4-cine.avi"
   )
 
@@ -74,8 +74,10 @@ test_that("read_mri works on 3d (ch 2-3-4 / cine) videos", {
   # expectation
   expect_array(imported_images, d = 3)
   expect_equal(dim(imported_images)[[3]], 26)
-  # expect_equal(
-  #   names(dimnames(imported_images)), c("R", "C", "T"))
+  expect_equal(
+    names(dimnames(imported_images)),
+    c("row", "col", "time")
+  )
 })
 
 
@@ -83,7 +85,7 @@ test_that("read_mri works on 3d (ch 1 / lge) videos", {
   # setup
   correct_file <- file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
-    "Parziale con codici", "Parziale con codici",
+    "data-raw", "2022-08-01_mri",
     "Bonato Renata", "bonato_renata-ch1-lge.avi"
   )
 
@@ -93,7 +95,10 @@ test_that("read_mri works on 3d (ch 1 / lge) videos", {
   # expectation
   expect_array(imported_images, d = 3)
   expect_equal(dim(imported_images)[[3]], 10)
-  # expect_equal(names(dimnames(imported_images)), c("R", "C", "S"))
+  expect_equal(
+    names(dimnames(imported_images)),
+    c("row", "col", "slice")
+  )
 })
 
 
@@ -102,8 +107,8 @@ test_that("read_mri works on 4d (ch 1 / cine) videos", {
   # setup
   correct_file <- file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
-    "Parziale con codici", "Parziale con codici",
-    "Bonato Renata", "casarin_giuseppe-ch1-cine-t25-s11.avi"
+    "data-raw", "2022-08-01_mri",
+    "Casarin Giuseppe", "casarin_giuseppe-ch1-cine-t25-s11.avi"
   )
 
   # execution
@@ -111,6 +116,32 @@ test_that("read_mri works on 4d (ch 1 / cine) videos", {
 
   # expectation
   expect_array(imported_images, d = 4)
-  expect_equal(dim(imported_images)[[3]], 10)
-  # expect_equal(names(dimnames(imported_images)), c("R", "C", "S"))
+  expect_equal(dim(imported_images)[[3]], 25) # time
+  expect_equal(dim(imported_images)[[4]], 11) # slice
+  expect_equal(
+    names(dimnames(imported_images)),
+    c("row", "col", "time", "slice")
+  )
+})
+
+
+test_that("everything works on problematic video", {
+  # setup
+    correct_file <- file.path(
+      Sys.getenv("PRJ_SHARED_PATH"),
+      "data-raw", "2022-08-01_mri",
+      "Agnolin Piergiorgio", "agnolin_piergiorgio-ch1-cine-t16-s8.avi"
+    )
+
+  # execution
+  imported_images <- read_mri(correct_file)
+
+  # expectation
+  expect_array(imported_images, d = 4)
+  expect_equal(dim(imported_images)[[3]], 16) # time
+  expect_equal(dim(imported_images)[[4]], 8) # slice
+  expect_equal(
+    names(dimnames(imported_images)),
+    c("row", "col", "time", "slice")
+  )
 })

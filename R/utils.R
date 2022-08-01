@@ -40,7 +40,7 @@ get_output_data_path <- function() {
 share_objects <- function(obj_list) {
   file_name <- paste0(names(obj_list), ".rds")
 
-  obj_paths <- file.path(get_output_data_path, file_name) |>
+  obj_paths <- file.path(get_output_data_path(), file_name) |>
     normalizePath(mustWork = FALSE) |>
     purrr::set_names(names(obj_list))
 

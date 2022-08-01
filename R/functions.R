@@ -78,20 +78,28 @@ read_long <- function(mri_path, type, mri_info = NULL) {
 
 read_short_cine <- function(mri_path, mri_info) {
   t_max <- mri_info[["t_max"]]
-  s_max <- mri_info[["s_max"]]
+  s_tot <- mri_info[["s_tot"]]
 
-  magick::image_read_video(mri_path, fps = NULL) |>
-    video_to_4dint(t_max, s_max)
+  res <- magick::image_read_video(mri_path, fps = NULL) |>
+    video_to_4dint(t_max, s_tot)
+  dimnames(res) <- list(
+    row = NULL, col = NULL, time = NULL, slice = NULL
+    )
+  res
 }
 
 read_short_lge <- function(mri_path) {
-  magick::image_read_video(mri_path, fps = NULL) |>
+  res <- magick::image_read_video(mri_path, fps = NULL) |>
     video_to_3dint()
+  dimnames(res) <- list(row = NULL, col = NULL, slice = NULL)
+  res
 }
 
 read_long_cine <- function(mri_path) {
-  magick::image_read_video(mri_path, fps = NULL) |>
+  res <- magick::image_read_video(mri_path, fps = NULL) |>
     video_to_3dint()
+  dimnames(res) <- list(row = NULL, col = NULL, time = NULL)
+  res
 }
 
 read_long_lge <- function(mri_path) {
@@ -99,23 +107,36 @@ read_long_lge <- function(mri_path) {
     gray3draw_to_gray2dint()
 }
 
-video_to_4dint <- function(avi, t_max, s_max) {
-  ui_warn("viene importato sempre un ultimo frame in più rispetto TxS!")
-  ui_todo("togliere l'ultimo frame prima dell'importazione")
-  stop("to be implemented")
-  full_seq <- seq_along(avi) |>
-    purrr::map(~ avi[[.x]] |> gray3draw_to_gray2dint()) |>
-    abind::abind(along = 3)
-  # d_seq <- dim(full_seq)
-  # stopifnot((t_max + s_max) != d_seq[[3]])
-  # dim(full_seq) <- c(d_seq[[1]], d_seq[[2]], t_max, s_max)
-  full_seq
+video_to_4dint <- function(avi, t_max, s_tot) {
+  n_frames <- length(avi) - 1L
+  starts <- which(seq_len(n_frames) %% t_max == 1)
+  if (length(starts) != s_tot) usethis::ui_stop("
+    Desequencing error.
+    Possible issues in t_max/s_tot. I.e. t_max * s_tot is different from the number of frames in the video.
+  ")
+
+  res <- starts |>
+    purrr::map(~ {
+      avi[.x + seq_len(t_max) -1L] |>
+        video_to_3dint()
+    }) |>
+    abind::abind(along = 4)
+
+  d_seq <- dim(res)
+  stopifnot((t_max + s_tot) == sum(d_seq[3:4]))
+  dim(res) <- c(d_seq[[1]], d_seq[[2]], t_max, s_tot)
+  dimnames(res) <- list(
+    row = NULL, col = NULL, dept = NULL, hyper = NULL
+  )
+  res
 }
 
 video_to_3dint <- function(avi) {
-  seq_along(avi) |>
+  res <- seq_along(avi) |>
     purrr::map(~ avi[[.x]] |> gray3draw_to_gray2dint()) |>
     abind::abind(along = 3)
+  dimnames(res) <- list(row = NULL, col = NULL, depth = NULL)
+  res
 }
 
 gray3draw_to_gray2dint <- function(img) {
@@ -123,7 +144,6 @@ gray3draw_to_gray2dint <- function(img) {
   res <- img[1, , , drop = TRUE] |>
     as.integer() |>
     matrix(nrow = dim_img[[2]], ncol = dim_img[[3]])
-
-  dimnames(res) <- list(R = NULL, C = NULL)
+  dimnames(res) <- list(row = NULL, col = NULL)
   res
 }
