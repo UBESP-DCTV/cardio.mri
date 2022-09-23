@@ -24,3 +24,9 @@ list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
 ex1 <- tar_read(patientsMrisPaths)[[1]]
 str(read_mri(ex1), 1L)
 
+a <- tar_read(mris_b381672b)
+
+str(a, 1)
+
+
+attributes(a[[1]])

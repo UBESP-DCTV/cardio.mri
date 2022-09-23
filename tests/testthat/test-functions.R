@@ -145,3 +145,66 @@ test_that("everything works on problematic video", {
     c("row", "col", "time", "slice")
   )
 })
+
+
+
+test_that("read_mri works on ch1.1 ch1.2 lge", {
+  # setup
+  correct_file_1 <- file.path(
+    Sys.getenv("PRJ_SHARED_PATH"),
+    "data-raw", "2022-08-01_mri",
+    "Zampieri Guerrino", "zampieri_guerrino-ch1.1-lge.avi"
+  )
+
+  # execution
+  imported_images <- read_mri(correct_file_1)
+
+  # expectation
+  expect_array(imported_images, d = 3)
+  expect_equal(dim(imported_images)[[3]], 6)
+  expect_equal(
+    names(dimnames(imported_images)),
+    c("row", "col", "slice")
+  )
+  expect_equal(
+    attributes(imported_images)[["mri_info"]][["ch"]],
+    1.1
+  )
+  expect_equal(
+    attributes(imported_images)[["mri_info"]][["type"]],
+    "lge"
+  )
+  expect_equal(
+    attributes(imported_images)[["mri_info"]][["t_max"]],
+    1
+  )
+
+})
+
+
+
+test_that("get_ch return the correct chamber/channel", {
+  # setup
+  a <- 1
+  b <- 2
+  c <- 3
+  d <- 4
+  e <- 1.1
+  f <- 1.2
+
+  # evaluation
+  res_a <- get_ch(a)
+  res_b <- get_ch(b)
+  res_c <- get_ch(c)
+  res_d <- get_ch(d)
+  res_e <- get_ch(e)
+  res_f <- get_ch(f)
+
+  # test
+  expect_equal(res_a, "1")
+  expect_equal(res_b, "2")
+  expect_equal(res_c, "3")
+  expect_equal(res_d, "4")
+  expect_equal(res_e, "1")
+  expect_equal(res_f, "1")
+})

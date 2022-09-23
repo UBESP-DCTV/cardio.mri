@@ -34,6 +34,13 @@ get_info_from_filename <- function(filename) {
 
 
 
+
+get_ch <- function(x) {
+  as.character(x) |>
+    stringr::str_sub(start = 1L, end = 1L)
+}
+
+
 read_mri <- function(mri_path) {
 
   mri_filename <- basename(mri_path)
@@ -46,18 +53,24 @@ read_mri <- function(mri_path) {
     stop("type or channel are empty")
   }
 
-  read_fun <- switch(channel,
+  read_fun <- switch(get_ch(channel),
     "1" = read_short,
     "2" = read_long,
     "3" = read_long,
     "4" = read_long,
-    stop("Unknown channel provided.")
+    usethis::ui_stop(
+      "Unknown channel provided: {usethis::ui_value(channel)}.
+      File name is: {usethis::ui_value(basename(mri_path))}."
+    )
   )
 
   res <- read_fun(mri_path, type, mri_info)
   attr(res, "mri_info") <- mri_info
   invisible(res)
 }
+
+
+
 
 read_short <- function(mri_path, type, mri_info) {
   switch(type,
@@ -81,7 +94,7 @@ read_short_cine <- function(mri_path, mri_info) {
   s_tot <- mri_info[["s_tot"]]
 
   res <- magick::image_read_video(mri_path, fps = NULL) |>
-    video_to_4dint(t_max, s_tot)
+    video_to_4dint(t_max, s_tot, mri_path)
   dimnames(res) <- list(
     row = NULL, col = NULL, time = NULL, slice = NULL
     )
@@ -107,11 +120,11 @@ read_long_lge <- function(mri_path) {
     gray3draw_to_gray2dint()
 }
 
-video_to_4dint <- function(avi, t_max, s_tot) {
+video_to_4dint <- function(avi, t_max, s_tot, path = NULL) {
   n_frames <- length(avi) - 1L
   starts <- which(seq_len(n_frames) %% t_max == 1)
   if (length(starts) != s_tot) usethis::ui_stop("
-    Desequencing error.
+    Desequencing error for file {path}.
     Possible issues in t_max/s_tot. I.e. t_max * s_tot is different from the number of frames in the video.
   ")
 

@@ -5,7 +5,10 @@ list.files(here::here("R"), pattern = "\\.R$", full.names = TRUE) |>
   lapply(source) |> invisible()
 
 # Set target-specific options such as packages.
-tar_option_set(error = "continue")
+tar_option_set(
+  error = "continue",
+  workspace_on_error = TRUE
+)
 
 # End this file with a list of target objects.
 list(
@@ -35,18 +38,20 @@ list(
   ),
 
   # compile your report
-  tar_render(report, here::here("reports/report.Rmd")),
+  tar_render(report, here::here("reports/report.Rmd"))
 
 
   # Decide what to share with other, and do it in a standard RDS format
-  tar_target(
-    objectToShare,
-    list(mris = mris)
-  ),
-  tar_target(
-    shareOutput,
-    share_objects(objectToShare),
-    format = "file",
-    pattern = map(objectToShare)
-  )
+  # tar_target(
+  #   objectToShare,
+  #   list(mris = mris)
+  # ),
+  # tar_target(
+  #   shareOutput,
+  #   share_objects(objectToShare),
+  #   format = "file",
+  #   pattern = map(objectToShare)
+  # )
 )
+
+# if (!length(tar_errored())) tar_destroy(destroy = "workspaces")
