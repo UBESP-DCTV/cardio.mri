@@ -168,7 +168,7 @@ test_that("read_mri works on ch1.1 ch1.2 lge", {
   )
   expect_equal(
     attributes(imported_images)[["mri_info"]][["ch"]],
-    1.1
+    1L
   )
   expect_equal(
     attributes(imported_images)[["mri_info"]][["type"]],
@@ -201,10 +201,10 @@ test_that("get_ch return the correct chamber/channel", {
   res_f <- get_ch(f)
 
   # test
-  expect_equal(res_a, "1")
-  expect_equal(res_b, "2")
-  expect_equal(res_c, "3")
-  expect_equal(res_d, "4")
-  expect_equal(res_e, "1")
-  expect_equal(res_f, "1")
+  expect_equal(res_a, 1L)
+  expect_equal(res_b, 2L)
+  expect_equal(res_c, 3L)
+  expect_equal(res_d, 4L)
+  expect_equal(res_e, 1L)
+  expect_equal(res_f, 1L)
 })

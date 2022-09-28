@@ -24,7 +24,7 @@ get_info_from_filename <- function(filename) {
     component[["t_max"]] <- 1L
   }
 
-  component[["ch"]] <- readr::parse_number(component[["ch"]])
+  component[["ch"]] <- get_ch(readr::parse_number(component[["ch"]]))
   if (component[["ch"]] != 1L) {
     component[["s_tot"]] <- 1L
   }
@@ -37,7 +37,8 @@ get_info_from_filename <- function(filename) {
 
 get_ch <- function(x) {
   as.character(x) |>
-    stringr::str_sub(start = 1L, end = 1L)
+    stringr::str_sub(start = 1L, end = 1L) |>
+    as.integer()
 }
 
 
@@ -53,7 +54,7 @@ read_mri <- function(mri_path) {
     stop("type or channel are empty")
   }
 
-  read_fun <- switch(get_ch(channel),
+  read_fun <- switch(channel,
     "1" = read_short,
     "2" = read_long,
     "3" = read_long,
