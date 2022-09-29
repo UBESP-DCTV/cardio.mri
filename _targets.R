@@ -14,7 +14,7 @@ tar_option_set(
 list(
 
   # Import your file from custom (shared) location, and preprocess them
-  tar_files(
+  tar_files_input(
     patientsFolders,
     list.dirs(get_input_data_path(), recursive = FALSE)
   ),
