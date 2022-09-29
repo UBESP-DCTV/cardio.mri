@@ -44,18 +44,18 @@ if (Sys.getenv("PRJ_SHARED_PATH") == "") {
 }
 
 
-if (!(fs::is_dir(Sys.getenv("PRJ_SHARED_PATH")))) {
+.get_prj_shared_path <- function() Sys.getenv('PRJ_SHARED_PATH')
+
+if (!(fs::is_dir(.get_prj_shared_path()))) {
   usethis::ui_stop("
   Environmental variable {usethis::ui_field('PRJ_SHARED_PATH')} is set to
-  {usethis::ui_value(Sys.getenv('PRJ_SHARED_PATH'))}.
+  {usethis::ui_value(.get_prj_shared_path())}.
 
   That path is not a valid folder.
   You must provide a valid folder in {usethis::ui_field('PRJ_SHARED_PATH')}.
   ")
 }
 
-
-.get_prj_shared_path <- function() Sys.getenv('PRJ_SHARED_PATH')
 
 targets::tar_config_set(
   store = file.path(.get_prj_shared_path(), "_targets")
@@ -72,3 +72,4 @@ targets::tar_config_set(
   store = file.path(.get_prj_shared_path(), "_targets"),
   config = "reports/_targets.yaml"
 )
+rm(.get_prj_shared_path)
