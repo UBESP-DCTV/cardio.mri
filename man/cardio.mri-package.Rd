@@ -6,7 +6,7 @@
 \alias{cardio.mri-package}
 \title{cardio.mri: "ML Cardiomyopathy (RM)}
 \description{
-\if{html}{\figure{logo.png}{options: align='right' alt='logo' width='120'}}
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
 Cardiomyopathy analyses from structured data and magnetic resonance imaging through an integrated deep learning approach.
 }

@@ -1,7 +1,10 @@
 
 # Project packages (TO BE UPDATED EVERY NEW PACKAGE USED) ----------
 
-prj_pkgs <- c()
+prj_pkgs <- c(
+  "abind", "av", "fs", "glue", "magick", "purrr", "readr", "stringr",
+  "targets", "withr"
+)
 gh_prj_pkgs <- c()
 meta_pkgs <- c()
 

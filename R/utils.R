@@ -21,13 +21,13 @@ extract_fct_names <- function(path) {
 }
 
 
-
 get_input_data_path <- function() {
   file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
     Sys.getenv("INPUT_DATA_FOLDER")
   )
 }
+
 
 get_output_data_path <- function() {
   file.path(
@@ -40,9 +40,9 @@ get_output_data_path <- function() {
 share_objects <- function(obj_list) {
   file_name <- paste0(names(obj_list), ".rds")
 
-  obj_paths <- file.path(get_output_data_path, file_name) |>
+  obj_paths <- file.path(get_output_data_path(), file_name) |>
     normalizePath(mustWork = FALSE) |>
-    set_names(names(obj_list))
+    purrr::set_names(names(obj_list))
 
   # Those must be RDS
   purrr::walk2(obj_list, obj_paths, readr::write_rds)

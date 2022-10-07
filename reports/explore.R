@@ -16,3 +16,17 @@ list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
 # use `tar_read(target_name)` to load a target anywhere (note that
 # `target_name` is NOT quoted!)
 
+# library(keras)
+#
+# dim(train_images) # NxLxH
+# dim(train_labels) # N
+
+ex1 <- tar_read(patientsMrisPaths)[[1]]
+str(read_mri(ex1), 1L)
+
+a <- tar_read(mris_b381672b)
+
+str(a, 1)
+
+
+attributes(a[[1]])
