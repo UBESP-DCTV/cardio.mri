@@ -21,6 +21,7 @@ read_tabular <- function(tabular_path) {
         dplyr::contains("data"),
         ~lubridate::as_date(as.numeric(.x), origin = "1899-12-30")
       ),
+      dplyr::across(where(~all(.x %in% c(0, 1, NA))), as.logical),
       generalita_sesso = .data[["generalita_sesso"]] |>
         factor(labels = c("maschio", "femmina"))
     )

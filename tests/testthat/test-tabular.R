@@ -31,4 +31,5 @@ test_that("correct data type imported", {
   expect_numeric(db[["generalita_peso_kg"]])
   expect_scalar_na(db[["generalita_peso_kg"]][[3]])
   expect_factor(db[["generalita_sesso"]], c("maschio", "femmina"))
+  expect_logical(db[["generalita_dislipidemia"]])
 })
