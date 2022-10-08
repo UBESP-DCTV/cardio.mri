@@ -27,14 +27,15 @@ str(read_mri(ex1), 1L)
 a <- tar_read(mris_b381672b)
 
 str(a, 1)
+attributes(a[[1]])
 
 
 attributes(a[[1]])
 
 
-data_path <- targets::tar_read(tabularPath)
-db <- read_tabular(data_path)
-View(db)
+out <- tar_read(outcome)
+View(out)
 
-tb <- tar_read(tabular)
-View(tb)
+b <- match_mri_out(a, out)
+
+a |> str(1)

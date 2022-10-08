@@ -42,11 +42,19 @@ list(
 
 # Import tabular --------------------------------------------------
 
-  tar_files_input(
+  tar_target(
     tabularPath, get_input_data_path("mri_tabular_latest.xlsx")
   ),
 
-  tar_target(tabular, read_tabular(tabularPath))
+  tar_target(tabular, read_tabular(tabularPath)),
+  tar_target(outcome, compose_outcome(tabular)),
+
+  tar_target(
+    matched,
+    match_mri_out(mris, outcome),
+    pattern = map(mris),
+    iteration = "list"
+  )
 
 
 # Report ----------------------------------------------------------
