@@ -2,7 +2,8 @@ read_tabular <- function(tabular_path) {
   readxl::read_xlsx(
       tabular_path,
       col_names = FALSE,
-      col_types = "text"
+      col_types = "text",
+      na = c("", " ", "-")
     ) |>
     unheadr::mash_colnames(
       n_name_rows = 3,
