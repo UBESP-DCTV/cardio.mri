@@ -30,3 +30,11 @@ str(a, 1)
 
 
 attributes(a[[1]])
+
+
+data_path <- targets::tar_read(tabularPath)
+db <- read_tabular(data_path)
+View(db)
+
+tb <- tar_read(tabular)
+View(tb)

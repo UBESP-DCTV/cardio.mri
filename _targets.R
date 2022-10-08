@@ -13,10 +13,12 @@ tar_option_set(
 # End this file with a list of target objects.
 list(
 
-  # Import your file from custom (shared) location, and preprocess them
+
+# import signals --------------------------------------------------
+
   tar_files_input(
     patientsFolders,
-    list.dirs(get_input_data_path(), recursive = FALSE)
+    list.dirs(get_input_data_path("2022-08-01_mri"), recursive = FALSE)
   ),
 
   tar_target(
@@ -37,14 +39,28 @@ list(
     iteration = "list"
   ),
 
-  # compile your report
-  tar_render(report, here::here("reports/report.Rmd"))
 
+# Import tabular --------------------------------------------------
+
+  tar_files_input(
+    tabularPath, get_input_data_path("mri_tabular_latest.xlsx")
+  ),
+
+  tar_target(tabular, read_tabular(tabularPath))
+
+
+# Report ----------------------------------------------------------
+
+  # compile your report
+  # tar_render(report, here::here("reports/report.Rmd")),
+
+
+# Share objects ---------------------------------------------------
 
   # Decide what to share with other, and do it in a standard RDS format
   # tar_target(
   #   objectToShare,
-  #   list(mris = mris)
+  #   list(mris = mris)  # 50 GB...
   # ),
   # tar_target(
   #   shareOutput,
