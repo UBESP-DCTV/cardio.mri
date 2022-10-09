@@ -21,18 +21,20 @@ extract_fct_names <- function(path) {
 }
 
 
-get_input_data_path <- function() {
+get_input_data_path <- function(x = "") {
   file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
-    Sys.getenv("INPUT_DATA_FOLDER")
+    Sys.getenv("INPUT_DATA_FOLDER"),
+    x
   )
 }
 
 
-get_output_data_path <- function() {
+get_output_data_path <- function(x = "") {
   file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
-    Sys.getenv("OUTPUT_DATA_FOLDER")
+    Sys.getenv("OUTPUT_DATA_FOLDER"),
+    x
   )
 }
 
@@ -47,4 +49,11 @@ share_objects <- function(obj_list) {
   # Those must be RDS
   purrr::walk2(obj_list, obj_paths, readr::write_rds)
   obj_paths
+}
+
+
+optimal_n_cores <- function(available_cores) {
+  max_usable <- max(1, available_cores - 2)
+  nearest_power_2 <- trunc(log2(max_usable))
+  2^nearest_power_2
 }

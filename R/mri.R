@@ -3,7 +3,6 @@ get_info_from_filename <- function(filename) {
 
   component <- filename |>
     stringr::str_remove("\\.(avi|png)$") |>
-    stringr::str_replace_all(" ", "_") |>
     stringr::str_split("-", simplify = TRUE) |>
     as.list()
 

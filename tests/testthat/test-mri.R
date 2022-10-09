@@ -1,4 +1,6 @@
 test_that("get_info_from_filename works", {
+  skip_if(as.logical(Sys.getenv("skip_mri_tests", FALSE)))
+
   # setup
   pinco_pallino <- list(
     ch1_cine = "pinco_pallino-ch1-cine-t25-s14.avi",
@@ -27,6 +29,8 @@ test_that("get_info_from_filename works", {
 
 
 test_that("read_mri works on 2d (ch 2-3-4 / lge) images", {
+  skip_if(as.logical(Sys.getenv("skip_mri_tests", FALSE)))
+
   # setup
   correct_file <- file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
@@ -43,6 +47,8 @@ test_that("read_mri works on 2d (ch 2-3-4 / lge) images", {
 
 
 test_that("gray3draw_to_gray2dint works", {
+  skip_if(as.logical(Sys.getenv("skip_mri_tests", FALSE)))
+
   # setup
   original_matrix <- matrix(1:16, nrow = 4)
   original_array <- array(original_matrix, dim = c(1, 4, 4))
@@ -61,6 +67,8 @@ test_that("gray3draw_to_gray2dint works", {
 
 
 test_that("read_mri works on 3d (ch 2-3-4 / cine) videos", {
+  skip_if(as.logical(Sys.getenv("skip_mri_tests", FALSE)))
+
   # setup
   correct_file <- file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
@@ -82,6 +90,8 @@ test_that("read_mri works on 3d (ch 2-3-4 / cine) videos", {
 
 
 test_that("read_mri works on 3d (ch 1 / lge) videos", {
+  skip_if(as.logical(Sys.getenv("skip_mri_tests", FALSE)))
+
   # setup
   correct_file <- file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
@@ -104,6 +114,8 @@ test_that("read_mri works on 3d (ch 1 / lge) videos", {
 
 
 test_that("read_mri works on 4d (ch 1 / cine) videos", {
+  skip_if(as.logical(Sys.getenv("skip_mri_tests", FALSE)))
+
   # setup
   correct_file <- file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
@@ -126,12 +138,14 @@ test_that("read_mri works on 4d (ch 1 / cine) videos", {
 
 
 test_that("everything works on problematic video", {
+  skip_if(as.logical(Sys.getenv("skip_mri_tests", FALSE)))
+
   # setup
-    correct_file <- file.path(
-      Sys.getenv("PRJ_SHARED_PATH"),
-      "data-raw", "2022-08-01_mri",
-      "Agnolin Piergiorgio", "agnolin_piergiorgio-ch1-cine-t16-s8.avi"
-    )
+  correct_file <- file.path(
+    Sys.getenv("PRJ_SHARED_PATH"),
+    "data-raw", "2022-08-01_mri",
+    "Agnolin Piergiorgio", "agnolin_piergiorgio-ch1-cine-t16-s8.avi"
+  )
 
   # execution
   imported_images <- read_mri(correct_file)
@@ -149,6 +163,8 @@ test_that("everything works on problematic video", {
 
 
 test_that("read_mri works on ch1.1 ch1.2 lge", {
+  skip_if(as.logical(Sys.getenv("skip_mri_tests", FALSE)))
+
   # setup
   correct_file_1 <- file.path(
     Sys.getenv("PRJ_SHARED_PATH"),
@@ -184,6 +200,8 @@ test_that("read_mri works on ch1.1 ch1.2 lge", {
 
 
 test_that("get_ch return the correct chamber/channel", {
+  skip_if(as.logical(Sys.getenv("skip_mri_tests", FALSE)))
+
   # setup
   a <- 1
   b <- 2
