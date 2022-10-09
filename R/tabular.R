@@ -70,3 +70,31 @@ match_mri_out <- function(mri, out) {
     mri$out <- case_output
     mri
 }
+
+select_clinical_interest <- function(x) {
+  x |>
+    dplyr::select(
+      .data[["generalita_eta_auto"]],
+      .data[["generalita_sesso"]],
+      .data[["generalita_peso_kg"]],
+      .data[["generalita_altezza_m"]],
+
+      .data[["generalita_dislipidemia"]],
+      .data[["generalita_ipertensione_arteriosa"]],
+      .data[["generalita_fumatore"]],
+      .data[["generalita_diabete_mellito"]],
+      .data[["generalita_familiarita_cad"]],
+      .data[["generalita_familiarita_cmp"]],
+      .data[["generalita_familiarita_per_scd"]],
+      .data[["generalita_bpco"]],
+      .data[["generalita_creatinina_umol_l"]],
+      .data[["generalita_nyha_rm"]],
+      .data[["laboratorio_nt_pro_bnp_pg_l"]],
+      .data[["ecg_device_ritmo_sinusale"]],
+      .data[["ecg_device_fibrillazione_flutter_atriale"]],
+      .data[["ecg_device_bb_sx"]],
+      .data[["follow_up_data_follow_up_aritmia"]],
+      .data[["follow_up_aritmia_ventricolare"]],
+      .data[["follow_up_mesi_follow_up"]]
+    )
+}

@@ -63,7 +63,9 @@ list(
     pattern = map(mris),
     iteration = "list",
     format = "qs"
-  )
+  ),
+
+  tar_target(clinical, select_clinical_interest(tabular))
 
 
 # Report ----------------------------------------------------------

@@ -8,7 +8,7 @@
     2^nearest_power_2
   }
 
-  function(proceed = TRUE, save_all = TRUE, future = FALSE) {
+  function(proceed = TRUE, save_all = TRUE) {
     if (interactive()) {
       if (
         requireNamespace("rstudioapi") &&
