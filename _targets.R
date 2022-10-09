@@ -1,8 +1,12 @@
 library(targets)
 library(tarchetypes)
+library(future)
+library("future.callr")
+plan(callr)
 
 list.files(here::here("R"), pattern = "\\.R$", full.names = TRUE) |>
   lapply(source) |> invisible()
+
 
 # Set target-specific options such as packages.
 tar_option_set(
@@ -18,7 +22,8 @@ list(
 
   tar_files_input(
     patientsFolders,
-    list.dirs(get_input_data_path("2022-08-01_mri"), recursive = FALSE)
+    get_input_data_path("2022-08-01_mri") |>
+      list.dirs(recursive = FALSE)
   ),
 
   tar_target(
@@ -36,14 +41,17 @@ list(
     mris,
     purrr::map(patientsMrisPaths, read_mri),
     pattern = map(patientsMrisPaths),
-    iteration = "list"
+    iteration = "list",
+    format = "qs"
   ),
 
 
 # Import tabular --------------------------------------------------
 
   tar_target(
-    tabularPath, get_input_data_path("mri_tabular_latest.xlsx")
+    tabularPath,
+    get_input_data_path("mri_tabular_latest.xlsx"),
+    format = "file"
   ),
 
   tar_target(tabular, read_tabular(tabularPath)),
@@ -53,7 +61,8 @@ list(
     matched,
     match_mri_out(mris, outcome),
     pattern = map(mris),
-    iteration = "list"
+    iteration = "list",
+    format = "qs"
   )
 
 

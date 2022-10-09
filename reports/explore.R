@@ -36,6 +36,38 @@ attributes(a[[1]])
 out <- tar_read(outcome)
 View(out)
 
+present <- out[[1]] |>
+  stringr::str_replace_all("_", " ") |>
+  stringr::str_to_title() |>
+  sort()
+
+
+missed <- warns[[2]][-nrow(warns)] |>
+  stringr::str_remove("No match for name ") |>
+  stringr::str_replace_all("_", " ") |>
+  stringr::str_to_title() |>
+  sort()
+
+
+purrr::map_lgl(missed |> purrr::set_names(), ~{
+  any(
+    stringr::str_detect(present, .x) |
+    stringr::str_detect(.x, present)
+  )
+})
+
 b <- match_mri_out(a, out)
 
 a |> str(1)
+
+
+matched_ccfdde5d
+matched_fe9007f4
+matched_b2f6cd69
+matched_2b911744
+matched_ae05b3e0
+matched_0d4fd41a
+matched_713aefa1
+matched_971deff0
+matched_3bbb77c6
+matched_89cf6d47

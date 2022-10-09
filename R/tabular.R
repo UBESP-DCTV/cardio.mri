@@ -35,33 +35,37 @@ compose_outcome <- function(x) {
     dplyr::transmute(
       name = paste(
         x[["generalita_cognome"]],
-        x[["generalita_nome"]],
-        sep = "_"
-      ),
+        x[["generalita_nome"]]
+      ) |> stringr::str_replace_all(" ", "_"),
       outcome = x[["follow_up_aritmia_ventricolare"]] == 1,
       fup = x[["follow_up_mesi_follow_up"]]
     )
 }
 
 match_mri_out <- function(mri, out) {
-    case_output <- out |>
-      dplyr::filter(
-        .data[["name"]] == attributes(mri[[1]])[["mri_info"]][["name"]]
+  current_name <- attributes(mri[[1]])[["mri_info"]][["name"]]
+  case_output <- out |>
+    dplyr::filter(
+      purrr::map_lgl(
+        .data[["name"]],
+        ~{ # one of them could be shorter for multiple first names
+          stringr::str_detect(.x, current_name) ||
+          stringr::str_detect(current_name, .x)
+        }
       )
+    )
 
     if (nrow(case_output) < 1) {
-      usethis::ui_warn("No match for name {out[['name']]}")
+      usethis::ui_warn("No match for name {current_name}")
     }
     if (nrow(case_output) > 1) {
       usethis::ui_warn(
-        "More than one match for name {out[['name']]}.
+        "More than one match for name {current_name}.
         Only the first will be considered.
         "
       )
       case_output <- case_output[1, ]
     }
-
-
 
     mri$out <- case_output
     mri

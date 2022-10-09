@@ -50,3 +50,10 @@ share_objects <- function(obj_list) {
   purrr::walk2(obj_list, obj_paths, readr::write_rds)
   obj_paths
 }
+
+
+optimal_n_cores <- function(available_cores) {
+  max_usable <- max(1, available_cores - 2)
+  nearest_power_2 <- trunc(log2(max_usable))
+  2^nearest_power_2
+}

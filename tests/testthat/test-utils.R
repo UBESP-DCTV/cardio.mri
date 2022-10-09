@@ -17,3 +17,14 @@ test_that("extract_fct_names works", {
   # expectation
   expect_equal(res, c("a", "c", "d", "%||%"))
 })
+
+test_that("optimal_n_cores works", {
+  # setup
+  available <- 1:16
+
+  # eval
+  res <- purrr::map_dbl(available, optimal_n_cores)
+
+  # expectation
+  expect_equal(res, c(1, 1, 1, 2, 2, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8))
+})

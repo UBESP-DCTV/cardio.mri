@@ -49,7 +49,8 @@ test_that("compose outcome works", {
 test_that("compose outcome works", {
   # setup
   db <- targets::tar_read(mris_b381672b)
-  out <- targets::tar_read(outcome) |>
+  out <- targets::tar_read(tabular) |>
+    compose_outcome() |>
     dplyr::mutate(
       name = paste(cognome, nome, sep = "_")
     )
