@@ -54,18 +54,17 @@ list(
     format = "file"
   ),
 
-  tar_target(tabular, read_tabular(tabularPath)),
-  tar_target(outcome, compose_outcome(tabular)),
+  tar_target(tabular_raw, read_tabular(tabularPath)),
+  tar_target(clinical, compose_clinical(tabular_raw)),
 
   tar_target(
     matched,
-    match_mri_out(mris, outcome),
+    match_mri_out(mris, clinical),
     pattern = map(mris),
     iteration = "list",
     format = "qs"
-  ),
+  )
 
-  tar_target(clinical, select_clinical_interest(tabular))
 
 
 # Report ----------------------------------------------------------

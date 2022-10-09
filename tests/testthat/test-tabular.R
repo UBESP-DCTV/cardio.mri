@@ -29,39 +29,36 @@ test_that("correct data type imported", {
   expect_character(db[["generalita_nome"]])
   expect_date(db[["generalita_data_di_nascita"]])
   expect_numeric(db[["generalita_peso_kg"]])
-  expect_scalar_na(db[["generalita_peso_kg"]][[3]])
+  expect_scalar_na(db[["generalita_peso_kg"]][[4]])
   expect_factor(db[["generalita_sesso"]], c("maschio", "femmina"))
   expect_logical(db[["generalita_dislipidemia"]])
 })
 
 
-test_that("compose outcome works", {
+test_that("compose_clinical works", {
   # setup
   db <- targets::tar_read(tabular)
 
   # evaluate
-  out <- compose_outcome(db)
+  out <- compose_clinical(db)
 
   # expectations
-  expect_tibble(out, ncols = 3)
+  expect_tibble(out, ncols = 22)
 })
 
 test_that("compose outcome works", {
   # setup
   db <- targets::tar_read(mris_b381672b)
   out <- targets::tar_read(tabular) |>
-    compose_outcome() |>
-    dplyr::mutate(
-      name = paste(cognome, nome, sep = "_")
-    )
+    compose_clinical()
 
   # evaluate
   matched <- match_mri_out(db, out)
 
   # expectations
   expect_list(matched)
-  expect_tibble(matched[["out"]])
+  expect_tibble(matched[["clinical"]])
 
-  matched[["out"]][["name"]] |>
+  matched[["clinical"]][["name"]] |>
     expect_equal(attributes(db[[1]])[["mri_info"]][["name"]])
 })
