@@ -2,13 +2,16 @@
 # you can simply source/execute this script (maybe using the
 # `dev/03-run_cycle.R` script)
 {
-  optimal_n_cores <- function(available_cores) {
-    max_usable <- max(1, available_cores - 2)
+  optimal_n_cores <- function(
+    available_cores,
+    left_free = min(2, available_cores - 1)
+  ) {
+    max_usable <- max(1, available_cores - left_free)
     nearest_power_2 <- trunc(log2(max_usable))
     2^nearest_power_2
   }
 
-  function(proceed = TRUE, save_all = TRUE, future = FALSE) {
+  function(proceed = TRUE, save_all = TRUE) {
     if (interactive()) {
       if (
         requireNamespace("rstudioapi") &&

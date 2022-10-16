@@ -30,21 +30,28 @@ read_tabular <- function(tabular_path) {
 }
 
 
-compose_outcome <- function(x) {
+compose_clinical <- function(x) {
   x |>
-    dplyr::transmute(
+    select_clinical_interest() |>
+    dplyr::mutate(
       name = paste(
-        x[["generalita_cognome"]],
-        x[["generalita_nome"]]
+        .data[["generalita_cognome"]],
+        .data[["generalita_nome"]]
       ) |> stringr::str_replace_all(" ", "_"),
       outcome = x[["follow_up_aritmia_ventricolare"]] == 1,
       fup = x[["follow_up_mesi_follow_up"]]
+    ) |>
+    dplyr::select(
+      - .data[["generalita_cognome"]],
+      - .data[["generalita_nome"]],
+      - .data[["follow_up_aritmia_ventricolare"]],
+      - .data[["follow_up_mesi_follow_up"]]
     )
 }
 
-match_mri_out <- function(mri, out) {
+match_mri_out <- function(mri, clinical) {
   current_name <- attributes(mri[[1]])[["mri_info"]][["name"]]
-  case_output <- out |>
+  case_output <- clinical |>
     dplyr::filter(
       purrr::map_lgl(
         .data[["name"]],
@@ -67,6 +74,37 @@ match_mri_out <- function(mri, out) {
       case_output <- case_output[1, ]
     }
 
-    mri$out <- case_output
+    mri$clinical <- case_output
     mri
+}
+
+select_clinical_interest <- function(x) {
+  x |>
+    dplyr::select(
+      .data[["generalita_cognome"]],
+      .data[["generalita_nome"]],
+
+      .data[["generalita_eta_auto"]],
+      .data[["generalita_sesso"]],
+      .data[["generalita_peso_kg"]],
+      .data[["generalita_altezza_m"]],
+
+      .data[["generalita_dislipidemia"]],
+      .data[["generalita_ipertensione_arteriosa"]],
+      .data[["generalita_fumatore"]],
+      .data[["generalita_diabete_mellito"]],
+      .data[["generalita_familiarita_cad"]],
+      .data[["generalita_familiarita_cmp"]],
+      .data[["generalita_familiarita_per_scd"]],
+      .data[["generalita_bpco"]],
+      .data[["generalita_creatinina_umol_l"]],
+      .data[["generalita_nyha_rm"]],
+      .data[["laboratorio_nt_pro_bnp_pg_l"]],
+      .data[["ecg_device_ritmo_sinusale"]],
+      .data[["ecg_device_fibrillazione_flutter_atriale"]],
+      .data[["ecg_device_bb_sx"]],
+      .data[["follow_up_data_follow_up_aritmia"]],
+      .data[["follow_up_aritmia_ventricolare"]],
+      .data[["follow_up_mesi_follow_up"]]
+    )
 }
