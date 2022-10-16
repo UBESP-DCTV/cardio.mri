@@ -74,7 +74,16 @@ match_mri_out <- function(mri, clinical) {
       case_output <- case_output[1, ]
     }
 
-    mri$clinical <- case_output
+    mri$clinical <- case_output |>
+      dplyr::select(
+        -.data[["outcome"]],
+        -.data[["fup"]]
+      )
+    mri$output <- case_output |>
+      dplyr::select(
+        .data[["outcome"]],
+        .data[["fup"]]
+      )
     mri
 }
 

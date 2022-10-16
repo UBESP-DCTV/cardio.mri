@@ -23,8 +23,47 @@ list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
 
 a <- tar_read(mris_b381672b)
 
+mt <- tar_read(matched)
 
-out <- tar_read(clinical)
-View(out)
 
+mt |> str(1)
+
+
+to_retain <- purrr::map_lgl(mt, ~length(.x) == 10)
+mt_used <- mt[to_retain]
+
+mt_fields <- purrr::transpose(mt_used)
+str(mt_fields[[1]], 1)
+
+mt_fields[[1]] |>
+  purrr::map(~{
+    dim(.x)
+  })
+
+
+max_dim <- mt_fields[[1]] |>
+   purrr::map(dim) |>
+   unlist() |>
+   matrix(nrow = 4) |>
+   apply(1, max)
+
+zeros <- zeros <- array(0L, dim = max_dim)
+
+mt_padded <- mt_fields[[1]] |>
+  purrr::map(~{
+    dims <- dim(.x)
+    idx <- purrr::map(dims, seq_len)
+    zeros[idx[[1]], idx[[2]], idx[[3]], idx[[4]]] <- .x
+    zeros
+  })
+
+res <- abind::abind(mt_padded, along = 0)
+
+
+r <- mt_fields[[1]] |>
+  abind::abind(along = 0)
+
+
+library(tensorflow)
+library(keras)
 

@@ -8,3 +8,5 @@ inst/extdata
 .Renviron
 
 _targets.yaml
+
+*.qs

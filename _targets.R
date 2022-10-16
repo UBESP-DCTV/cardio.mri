@@ -39,7 +39,14 @@ list(
 
   tar_target(
     mris,
-    purrr::map(patientsMrisPaths, read_mri),
+    {
+      component_names <- purrr::map_chr(patientsMrisPaths, ~{
+        get_info_from_filename(basename(.x))[c("type", "ch")] |>
+          paste(collapse = "-")
+      })
+      names(patientsMrisPaths) <- component_names
+      purrr::map(patientsMrisPaths, read_mri)
+    },
     pattern = map(patientsMrisPaths),
     iteration = "list",
     format = "qs"
