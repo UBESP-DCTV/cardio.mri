@@ -33,23 +33,21 @@ to_retain <- purrr::map_lgl(mt, ~length(.x) == 10)
 mt_used <- mt[to_retain]
 
 mt_fields <- purrr::transpose(mt_used)
-str(mt_fields[[1]], 1)
+str(mt_fields[["cine-1"]], 1)
 
-mt_fields[[1]] |>
-  purrr::map(~{
-    dim(.x)
-  })
+qs::qsave(mt_fields, "mt_field.qs")
+
+purrr::map(mt_fields[["cine-1"]], dim)
 
 
-max_dim <- mt_fields[[1]] |>
-   purrr::map(dim) |>
+max_dim <- purrr::map(mt_fields[["cine-1"]], dim) |>
    unlist() |>
    matrix(nrow = 4) |>
    apply(1, max)
 
 zeros <- zeros <- array(0L, dim = max_dim)
 
-mt_padded <- mt_fields[[1]] |>
+mt_padded <- mt_fields[["cine-1"]] |>
   purrr::map(~{
     dims <- dim(.x)
     idx <- purrr::map(dims, seq_len)
@@ -60,10 +58,35 @@ mt_padded <- mt_fields[[1]] |>
 res <- abind::abind(mt_padded, along = 0)
 
 
-r <- mt_fields[[1]] |>
+r <- mt_fields[["cine-1"]] |>
   abind::abind(along = 0)
 
 
+library(reticulate)
 library(tensorflow)
 library(keras)
 
+
+cine_1 <- qs::qread("cine-1.qs")
+mt_field <- qs::qread("mt_field.qs")
+out <- dplyr::bind_rows(mt_field[["output"]])[["outcome"]]
+rm(mt_field)
+gc()
+
+
+model <- keras_model_sequential(
+    input_shape = c(640, 480, 18, 25) # 640 480 18 25
+  ) |>
+  layer_flatten() |>
+  layer_dense(2, activation = "relu") |>
+  layer_dense(1)
+
+model %>% compile(
+  optimizer = "adam",
+  loss = loss_sparse_categorical_crossentropy(from_logits = TRUE),
+  metrics = "accuracy"
+)
+
+summary(model)
+
+model %>% fit(cine_1, out, epochs = 5)
