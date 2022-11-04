@@ -70,7 +70,8 @@ list(
     pattern = map(mris),
     iteration = "list",
     format = "qs"
-  )
+  ),
+  tar_target(forKeras, for_keras(matched), format = "qs")
 
 
 

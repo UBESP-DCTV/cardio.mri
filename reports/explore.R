@@ -21,9 +21,12 @@ list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
 # dim(train_images) # NxLxH
 # dim(train_labels) # N
 
+transposed <- tar_read(forKeras)
+
+
 a <- tar_read(mris_b381672b)
 
-mt <- tar_read(matched)
+mt <- tar_read(matched, branches = 1)
 
 
 mt |> str(1)
