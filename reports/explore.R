@@ -21,15 +21,20 @@ list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
 # dim(train_images) # NxLxH
 # dim(train_labels) # N
 
+mt <- tar_read(matchedT)
+
+mtc1 <- mt[["cine-1"]]
+
 transposed <- tar_read(forKeras)
 
 
 a <- tar_read(mris_b381672b)
 
-mt <- tar_read(matched, branches = 1)
+mt <- tar_read(matched, branches = 1)[[1]]
 
 
-mt |> str(1)
+mt[[1]] |> str(1)
+mt[[1]] |> attributes()
 
 
 to_retain <- purrr::map_lgl(mt, ~length(.x) == 10)
@@ -93,3 +98,55 @@ model %>% compile(
 summary(model)
 
 model %>% fit(cine_1, out, epochs = 5)
+
+
+
+
+# setup
+dim_a <- c(2, 3, 4, 5)
+a <- array(sample.int(prod(dim_a), replace = TRUE), dim = dim_a)
+
+dim_b <- c(2, 3, 3, 6)
+b <- array(sample.int(prod(dim_b), replace = TRUE), dim = dim_b)
+
+base_dim <- c(2, 3, 5, 7)
+
+
+fa <- function(x, dims = c(640, 480, 30, 25)) {
+  mt_padded <- purrr::map(x, ~{
+    if (is.null(.x)) {
+      pad_array(out_dims = dims)
+    } else {
+      pad_array(.x, dims)
+    }
+  })
+  abind::abind(mt_padded, along = 0.5)
+}
+
+fb <- function(x, dims = c(640, 480, 30, 25)) {
+  n <- length(x)
+  res <- array(
+    NA_integer_,
+    dim = c(n, dims),
+    dimnames = list(names(x), rep(NULL, length(dims)))
+  )
+
+  for (i in seq_len(n)) {
+
+    res[i, , , , ] <- if (is.null(x[[i]])) {
+      array(-1L, dims)
+    } else {
+      pad_array(x[[i]], dims)
+    }
+  }
+  res
+}
+
+
+res_bench <- bench::mark(
+  fa_res = fa(list(a = a, b = b)),
+  fb_res = fb(list(a = a, b = b))
+,  iterations = 1
+)
+plot(res_bench)
+
