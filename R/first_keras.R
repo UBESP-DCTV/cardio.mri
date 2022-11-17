@@ -127,5 +127,3 @@ pad_array <- function(
   out_pattern[original_pos] <- original_array[original_pos]
   out_pattern
 }
-
-

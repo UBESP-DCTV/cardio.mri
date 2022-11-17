@@ -127,12 +127,14 @@ video_to_4dint <- function(avi, t_max, s_tot, path = NULL) {
   starts <- which(seq_len(n_frames) %% t_max == 1)
   if (length(starts) != s_tot) usethis::ui_stop("
     Desequencing error for file {path}.
-    Possible issues in t_max/s_tot. I.e. t_max * s_tot is different from the number of frames in the video.
+    Possible issues in t_max/s_tot.
+    I.e. t_max * s_tot is different from the number of frames
+         in the video.
   ")
 
   res <- starts |>
     purrr::map(~ {
-      avi[.x + seq_len(t_max) -1L] |>
+      avi[.x + seq_len(t_max) - 1L] |>
         video_to_3dint()
     }) |>
     abind::abind(along = 4)

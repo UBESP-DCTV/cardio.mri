@@ -11,7 +11,7 @@ list.files(here::here("R"), pattern = "\\.R$", full.names = TRUE) |>
 # Set target-specific options such as packages.
 tar_option_set(
   resources = tar_resources(
-    qs = tar_resources_qs(preset = "fast")
+    qs = tar_resources_qs(preset = "high")
   ),
   garbage_collection = TRUE,
   error = "continue",
