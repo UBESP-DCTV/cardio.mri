@@ -18,8 +18,10 @@ list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
 
 
 
+
+
 library(reticulate)
-use_condaenv("tf")
+use_condaenv("tf", required = TRUE)
 
 library(tensorflow)
 tf_config()
@@ -63,13 +65,15 @@ cine_l1 <- input_cine %>%
     padding = "same",
     input_shape = c(30L, 640L, 480L, 28L),
     activation = "relu"
-  ) %>%
+  )
+
+cine_l1_padded <- cine_l1 %>%
   keras::k_spatial_2d_padding(
     padding = list(list(63L, 64L), list(16L, 16L)),
     data_format = "channels_last"
   )
 
-cine_l2 <- cine_l1 %>%
+cine_l2 <- cine_l1_padded %>%
   keras::layer_max_pooling_2d(
     pool_size = c(2L, 2L),
     strides = c(3L, 2L),
@@ -80,16 +84,21 @@ cine_l2 <- cine_l1 %>%
 input_s_lge <- layer_input(
     name = "input_s_lge",
     shape = c(640, 480, 25)
-  ) %>%
+  )
+
+input_s_lge_padded <- input_s_lge  %>%
   keras::k_spatial_2d_padding(
     padding = list(list(63L, 64L), list(16L, 16L)),
     data_format = "channels_last"
-  ) %>%
+  )
+
+input_s_lge_pooled <- input_s_lge_padded %>%
   keras::layer_max_pooling_2d(
     pool_size = c(2L, 2L),
     strides = c(3L, 2L),
     name = "pooling_lge"
   )
+
 input_l2c_lge <- layer_input(
   name = "input_l2c_lge",
   shape = c(256, 256, 1)
@@ -104,7 +113,7 @@ input_l4c_lge <- layer_input(
 )
 
 lge_l0 <- layer_concatenate(
-  c(input_s_lge, input_l2c_lge, input_l3c_lge, input_l4c_lge),
+  c(input_s_lge_pooled, input_l2c_lge, input_l3c_lge, input_l4c_lge),
   axis = 3,
   name = "lge_l0"
 )
@@ -188,4 +197,8 @@ model <- keras::keras_model(
 )
 
 summary(model)
-plot(model)
+keras:::plot.keras.engine.training.Model(model, show_shapes = TRUE, show_layer_names = TRUE)
+
+
+
+

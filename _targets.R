@@ -95,45 +95,88 @@ list(
     format = "qs"
   ),
 
+
+  tar_target(
+    cine2Keras_train,
+    merge_cine_long(matchedT[["cine-2"]][-testIndeces]),
+    format = "qs"
+  ),
+  tar_target(
+    cine2Keras_test,
+    merge_cine_long(matchedT[["cine-2"]][testIndeces]),
+    format = "qs"
+  ),
+
+
+  tar_target(
+    cine3Keras_train,
+    merge_cine_long(matchedT[["cine-3"]][-testIndeces]),
+    format = "qs"
+  ),
+  tar_target(
+    cine3Keras_test,
+    merge_cine_long(matchedT[["cine-3"]][testIndeces]),
+    format = "qs"
+  ),
+
+
 tar_target(
-    cine2Keras,
-    merge_cine_long(matchedT[["cine-2"]]),
-    format = "qs"
-  ),
+  cine4Keras_train,
+  merge_cine_long(matchedT[["cine-4"]][-testIndeces]),
+  format = "qs"
+),
+tar_target(
+  cine4Keras_test,
+  merge_cine_long(matchedT[["cine-4"]][testIndeces]),
+  format = "qs"
+),
 
-  tar_target(
-    cine3Keras,
-    merge_cine_long(matchedT[["cine-3"]]),
-    format = "qs"
-  ),
 
-  tar_target(
-    cine4Keras,
-    merge_cine_long(matchedT[["cine-4"]]),
-    format = "qs"
-  ),
-  tar_target(
-    lge1Keras,
-    merge_lge_short(matchedT[["lge-1"]]),
-    format = "qs"
-  ),
-  tar_target(
-    lge2Keras,
-    merge_lge_long(matchedT[["lge-2"]]),
-    format = "qs"
-  ),
+tar_target(
+  lge1Keras_train,
+  merge_lge_short(matchedT[["lge-1"]][-testIndeces]),
+  format = "qs"
+),
+tar_target(
+  lge1Keras_test,
+  merge_lge_short(matchedT[["lge-1"]][testIndeces]),
+  format = "qs"
+),
 
-  tar_target(
-    lge3Keras,
-    merge_lge_long(matchedT[["lge-3"]]),
-    format = "qs"
-  ),
 
-  tar_target(
-    lge4Keras,
-    merge_lge_long(matchedT[["lge-4"]]),
-    format = "qs"
-  )
+tar_target(
+  lge2Keras_train,
+  merge_lge_long(matchedT[["lge-2"]][-testIndeces]),
+  format = "qs"
+),
+tar_target(
+  lge2Keras_test,
+  merge_lge_long(matchedT[["lge-2"]][testIndeces]),
+  format = "qs"
+),
+
+
+tar_target(
+  lge3Keras_train,
+  merge_lge_long(matchedT[["lge-3"]][-testIndeces]),
+  format = "qs"
+),
+tar_target(
+  lge3Keras_test,
+  merge_lge_long(matchedT[["lge-3"]][testIndeces]),
+  format = "qs"
+),
+
+tar_target(
+  lge4Keras_train,
+  merge_lge_long(matchedT[["lge-4"]][-testIndeces]),
+  format = "qs"
+),
+tar_target(
+  lge4Keras_test,
+  merge_lge_long(matchedT[["lge-4"]][testIndeces]),
+  format = "qs"
+)
 
 
 # Report ----------------------------------------------------------
