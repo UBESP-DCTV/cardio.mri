@@ -11,7 +11,7 @@ list.files(here::here("R"), pattern = "\\.R$", full.names = TRUE) |>
 # Set target-specific options such as packages.
 tar_option_set(
   resources = tar_resources(
-    qs = tar_resources_qs(preset = "high")
+    qs = tar_resources_qs(preset = "fast")
   ),
   garbage_collection = TRUE,
   error = "continue",
@@ -79,104 +79,163 @@ list(
 
 
   tar_target(
-    testIndeces,
-    sample(seq_along(matched), size = floor(0.3 * length(matched)))
+    idx,
+    {
+      all_idx <- seq_along(patientsFolders)
+
+      test_idx <- all_idx |>
+        sample(size = floor(0.3 * length(all_idx)))
+
+      train_val_idx <- setdiff(all_idx, test_idx)
+
+      val_idx <- train_val_idx |>
+        sample(size = floor(0.3 * length(train_val_idx)))
+
+      train_idx <- setdiff(train_val_idx, val_idx)
+      list(
+        train_idx = train_idx, val_idx = val_idx, test_idx = test_idx
+      )
+    }
   ),
+
+  tar_target(trainIdx, idx[["train_idx"]]),
+  tar_target(valIdx, idx[["val_idx"]]),
+  tar_target(testIdx, idx[["test_idx"]]),
 
 
   tar_target(
     cine1Keras_train,
-    merge_cine_short(matchedT[["cine-1"]][-testIndeces]),
+    merge_cine_short(matchedT[["cine-1"]][trainIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    cine1Keras_val,
+    merge_cine_short(matchedT[["cine-1"]][valIdx]),
     format = "qs"
   ),
   tar_target(
     cine1Keras_test,
-    merge_cine_short(matchedT[["cine-1"]][testIndeces]),
+    merge_cine_short(matchedT[["cine-1"]][testIdx]),
     format = "qs"
   ),
 
 
   tar_target(
     cine2Keras_train,
-    merge_cine_long(matchedT[["cine-2"]][-testIndeces]),
+    merge_cine_long(matchedT[["cine-2"]][trainIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    cine2Keras_val,
+    merge_cine_long(matchedT[["cine-2"]][valIdx]),
     format = "qs"
   ),
   tar_target(
     cine2Keras_test,
-    merge_cine_long(matchedT[["cine-2"]][testIndeces]),
+    merge_cine_long(matchedT[["cine-2"]][testIdx]),
     format = "qs"
   ),
 
 
   tar_target(
     cine3Keras_train,
-    merge_cine_long(matchedT[["cine-3"]][-testIndeces]),
+    merge_cine_long(matchedT[["cine-3"]][trainIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    cine3Keras_val,
+    merge_cine_long(matchedT[["cine-3"]][valIdx]),
     format = "qs"
   ),
   tar_target(
     cine3Keras_test,
-    merge_cine_long(matchedT[["cine-3"]][testIndeces]),
+    merge_cine_long(matchedT[["cine-3"]][testIdx]),
     format = "qs"
   ),
 
 
-tar_target(
-  cine4Keras_train,
-  merge_cine_long(matchedT[["cine-4"]][-testIndeces]),
-  format = "qs"
-),
-tar_target(
-  cine4Keras_test,
-  merge_cine_long(matchedT[["cine-4"]][testIndeces]),
-  format = "qs"
-),
+  tar_target(
+    cine4Keras_train,
+    merge_cine_long(matchedT[["cine-4"]][trainIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    cine4Keras_val,
+    merge_cine_long(matchedT[["cine-4"]][valIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    cine4Keras_test,
+    merge_cine_long(matchedT[["cine-4"]][testIdx]),
+    format = "qs"
+  ),
 
 
-tar_target(
-  lge1Keras_train,
-  merge_lge_short(matchedT[["lge-1"]][-testIndeces]),
-  format = "qs"
-),
-tar_target(
-  lge1Keras_test,
-  merge_lge_short(matchedT[["lge-1"]][testIndeces]),
-  format = "qs"
-),
+  tar_target(
+    lge1Keras_train,
+    merge_lge_short(matchedT[["lge-1"]][trainIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    lge1Keras_val,
+    merge_lge_short(matchedT[["lge-1"]][valIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    lge1Keras_test,
+    merge_lge_short(matchedT[["lge-1"]][testIdx]),
+    format = "qs"
+  ),
 
 
-tar_target(
-  lge2Keras_train,
-  merge_lge_long(matchedT[["lge-2"]][-testIndeces]),
-  format = "qs"
-),
-tar_target(
-  lge2Keras_test,
-  merge_lge_long(matchedT[["lge-2"]][testIndeces]),
-  format = "qs"
-),
+  tar_target(
+    lge2Keras_train,
+    merge_lge_long(matchedT[["lge-2"]][trainIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    lge2Keras_val,
+    merge_lge_long(matchedT[["lge-2"]][valIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    lge2Keras_test,
+    merge_lge_long(matchedT[["lge-2"]][testIdx]),
+    format = "qs"
+  ),
 
 
-tar_target(
-  lge3Keras_train,
-  merge_lge_long(matchedT[["lge-3"]][-testIndeces]),
-  format = "qs"
-),
-tar_target(
-  lge3Keras_test,
-  merge_lge_long(matchedT[["lge-3"]][testIndeces]),
-  format = "qs"
-),
+  tar_target(
+    lge3Keras_train,
+    merge_lge_long(matchedT[["lge-3"]][trainIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    lge3Keras_val,
+    merge_lge_long(matchedT[["lge-3"]][valIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    lge3Keras_test,
+    merge_lge_long(matchedT[["lge-3"]][testIdx]),
+    format = "qs"
+  ),
 
-tar_target(
-  lge4Keras_train,
-  merge_lge_long(matchedT[["lge-4"]][-testIndeces]),
-  format = "qs"
-),
-tar_target(
-  lge4Keras_test,
-  merge_lge_long(matchedT[["lge-4"]][testIndeces]),
-  format = "qs"
-)
+  tar_target(
+    lge4Keras_train,
+    merge_lge_long(matchedT[["lge-4"]][trainIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    lge4Keras_val,
+    merge_lge_long(matchedT[["lge-4"]][valIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    lge4Keras_test,
+    merge_lge_long(matchedT[["lge-4"]][testIdx]),
+    format = "qs"
+  )
 
 
 # Report ----------------------------------------------------------

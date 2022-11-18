@@ -20,6 +20,74 @@ list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
 
 
 
+data_generator <- function(batch_size) {
+
+  s_cine  <- targets::tar_read(cine1Keras_train)
+  l2_cine <- targets::tar_read(cine2Keras_train)
+  l3_cine <- targets::tar_read(cine3Keras_train)
+  l4_cine <- targets::tar_read(cine4Keras_train)
+
+  s_lge  <- targets::tar_read(lge1Keras_train)
+  l2_lge <- targets::tar_read(lge2Keras_train)
+  l3_lge <- targets::tar_read(lge3Keras_train)
+  l4_lge <- targets::tar_read(lge4Keras_train)
+
+  nodes_name <- attr(l4_lge, "dimnames")[[1]]
+
+  # start iterator
+  i <- 1
+
+  # return an iterator function
+  function() {
+    current_start_id <- i + batch_size - 1
+    last_id <- length(nodes_name)
+
+    # reset iterator if already seen all data
+    if (current_start_id > last_id) i <<- 1
+
+    # iterate current batch's rows
+    rows <- i:min(current_start_id, last_id)
+
+    # update to next iteration
+    i <<- current_start_id + 1
+
+    # find the outcome
+    records <- nodes_name[rows]
+    outcomes <- purrr::map_int(records, ~{
+      as.integer(targets::tar_read_raw(.x)[["output"]][["outcome"]])
+    })
+
+    y_array <- array(
+      c(seq_along(records), outcomes),
+      dim = c(length(records), length(outcomes))
+    )
+
+    # return the batch
+    res <- list(
+      s_cine = s_cine[records, , , , , drop = FALSE],
+      l2_cine = l2_cine[records, , , , drop = FALSE],
+      l3_cine = l3_cine[records, , , , drop = FALSE],
+      l4_cine = l4_cine[records, , , , drop = FALSE],
+      s_lge = s_lge[records, , , , drop = FALSE],
+      l2_lge = l2_lge[records, , , drop = FALSE],
+      l3_lge = l3_lge[records, , , drop = FALSE],
+      l4_lge = l4_lge[records, , , drop = FALSE],
+      y = y_array
+    )
+    gc(FALSE, TRUE)
+    gc(FALSE, TRUE)
+    res
+  }
+}
+
+
+gen <- data_generator(4)
+
+
+
+
+
+
 library(reticulate)
 use_condaenv("tf", required = TRUE)
 
