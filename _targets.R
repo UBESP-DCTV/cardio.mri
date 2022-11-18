@@ -80,7 +80,7 @@ list(
 
   tar_target(
     testIndeces,
-    sample(seq_along(matched), size = floor(0.2 * length(matched)))
+    sample(seq_along(matched), size = floor(0.3 * length(matched)))
   ),
 
 

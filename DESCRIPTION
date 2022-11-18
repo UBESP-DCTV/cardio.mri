@@ -34,6 +34,7 @@ Suggests:
     blogdown,
     checkmate,
     covr,
+    deepviz (>= 0.0.1.9000),
     depigner,
     devtools,
     distill,
@@ -65,6 +66,7 @@ Suggests:
     xaringanExtra (>= 0.5.5),
     xaringanthemer (>= 0.4.1)
 Remotes: 
+    andrie/deepviz,
     CorradoLanera/autotestthat,
     gadenbuie/metathis,
     gadenbuie/xaringanExtra,

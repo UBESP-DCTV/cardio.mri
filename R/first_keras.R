@@ -8,7 +8,7 @@ transposed <- function(x) {
 
 
 
-merge_cine_short <- function(x, dims = c(640, 480, 30, 25)) {
+merge_cine_short <- function(x, dims = c(30, 640, 480, 25)) {
   stopifnot(is.list(x))
   stopifnot(all(purrr::map_lgl(x, ~is.array(.x) || is.null(.x))))
 
@@ -32,7 +32,7 @@ merge_cine_short <- function(x, dims = c(640, 480, 30, 25)) {
   res
 }
 
-merge_cine_long <- function(x, dims = c(640, 480, 30)) {
+merge_cine_long <- function(x, dims = c(30, 640, 480)) {
   stopifnot(is.list(x))
   stopifnot(all(purrr::map_lgl(x, ~is.array(.x) || is.null(.x))))
 
