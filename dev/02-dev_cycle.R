@@ -5,13 +5,19 @@ prj_pkgs <- c(
   "abind", "av", "fs", "glue", "magick", "purrr", "readr", "stringr",
   "targets", "withr"
 )
+dev_pkg <- c("littler")
 gh_prj_pkgs <- c("andrie/deepviz")
 meta_pkgs <- c()
 
-renv::install(c(prj_pkgs, gh_prj_pkgs, meta_pkgs))
+renv::install(c(prj_pkgs, dev_pkg, gh_prj_pkgs, meta_pkgs))
 
 purrr::walk(prj_pkgs, usethis::use_package)
-purrr::walk(gh_prj_pkgs, ~{
+
+purrr::walk(c(dev_pkg), ~{
+  usethis::use_package(package_name, type = "Suggests")
+})
+
+purrr::walk(c(gh_prj_pkgs), ~{
   package_name <- stringr::str_extract(.x, "[\\w\\.]+$")
   usethis::use_dev_package(package_name, remote = .x, type = "Suggests")
 })

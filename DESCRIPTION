@@ -47,6 +47,7 @@ Suggests:
     igraph,
     knitr,
     lintr,
+    littler (>= 0.3.17),
     markdown,
     metathis (>= 1.1.1),
     mice,
@@ -65,7 +66,7 @@ Suggests:
     xaringan,
     xaringanExtra (>= 0.5.5),
     xaringanthemer (>= 0.4.1)
-Remotes: 
+Remotes:  
     andrie/deepviz,
     CorradoLanera/autotestthat,
     gadenbuie/metathis,
