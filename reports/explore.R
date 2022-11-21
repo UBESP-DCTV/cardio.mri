@@ -6,6 +6,27 @@
 
 library(targets)
 library(here)
+library(depigner)
+
+
+library(reticulate)
+use_condaenv("tf", required = TRUE)
+ system2("export", "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/")
+
+library(tensorflow)
+library(keras)
+np <- import("numpy", convert = FALSE)
+
+#
+#
+# tf_config()
+# tf_gpu_configured()
+#
+#
+# Sys.sleep(5)
+
+
+
 
 # load all your custom functions
 list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
@@ -33,18 +54,14 @@ n_batches_val <- ceiling(n_val / batch_size_val)
 rm(lg4train, lg4val, nodes_name_train, nodes_name_val)
 
 # get path of or save batcehs
-bfp_path <- glue::glue(
-    "dev/t{batch_size_train}v{batch_size_val}-batch_file_paths.rds"
+train_bfp_path <- glue::glue(
+    "dev/{batch_size_train}-batch_train_file_paths.rds"
   ) |>
   here::here()
 
-if (fs::file_exists(bfp_path)) {
-  batch_file_paths <- readr::read_rds(bfp_path)
-  train_files <- batch_file_paths[["train_files"]]
-  val_files <- batch_file_paths[["val_files"]]
-  rm(batch_file_paths)
+train_batches_file_paths <- if (fs::file_exists(train_bfp_path)) {
+  readr::read_rds(train_bfp_path)
 } else {
-
   train_generator <- function(batch_size) {
     # start iterator
     i <- 1
@@ -91,6 +108,37 @@ if (fs::file_exists(bfp_path)) {
     }
   }
 
+  # retrieve, subset, quick save individual batches for train and val
+  gen_train <- train_generator(batch_size_train)
+  train_files <- purrr::map_chr(seq_len(n_batches_train), ~{
+    train_file <- fs::file_temp(
+      pattern = paste0("train_batch-", .x, "-", n_batches_train, "_"),
+      tmp_dir = here::here("dev/batches") |> fs::dir_create(),
+      ext = "qs"
+    )
+    qs::qsave(gen_train(), train_file, preset = "fast")
+    usethis::ui_done(
+      "({.x}/{n_batches_train}): {usethis::ui_value('train_batch-{{.x}}.qs')} written on disk at {usethis::ui_code(train_file)}."
+    )
+    train_file
+  })
+  rm(n_train, gen_train, train_generator)
+
+  train_files |>
+    readr::write_rds(train_bfp_path)
+}
+rm(train_bfp_path)
+
+
+# get path of or save batcehs
+val_bfp_path <- glue::glue(
+  "dev/{batch_size_val}-batch_val_file_paths.rds"
+) |>
+  here::here()
+
+val_batches_file_paths <- if (fs::file_exists(val_bfp_path)) {
+  readr::read_rds(val_bfp_path)
+} else {
   val_generator <- function(batch_size) {
     # start iterator
     i <- 1
@@ -137,42 +185,29 @@ if (fs::file_exists(bfp_path)) {
     }
   }
 
-
-  # retrieve, subset, quick save individual batches for train and val
-  gen_train <- train_generator(batch_size_train)
-  train_files <- purrr::map_chr(seq_len(n_batches_train), ~{
-    train <- gen_train()
-    train_file <- fs::file_temp(pattern = paste0("train_batch-", .x), ext = "qs")
-    qs::qsave(train, train_file, preset = "fast", nthreads = 16)
-    usethis::ui_done(
-      "({.x}/{n_batches_train}): {usethis::ui_value('train_batch-{.x}.qs')} written on disk at {usethis::ui_code(train_file)}."
-    )
-    train_file
-  })
-  rm(n_train, gen_train, train_generator)
-
   gen_val <- val_generator(batch_size_val)
   val_files <- purrr::map_chr(seq_len(n_batches_val), ~{
-    val <- gen_val()
-    val_file <- fs::file_temp(pattern = paste0("val_batch-", .x), ext = "qs")
-    qs::qsave(val, val_file, preset = "fast", nthreads = 16)
+    val_file <- fs::file_temp(
+      pattern = paste0("val_batch-", .x, "-", n_batches_val, "_"),
+      tmp_dir = here::here("dev/batches") |> fs::dir_create(),
+      ext = "qs"
+    )
+    qs::qsave(gen_val(), val_file, preset = "fast")
     usethis::ui_done(
-      "({.x}/{n_batches_val}): {usethis::ui_value('val_batch-{.x}.qs')} written on disk at {usethis::ui_code(val_file)}."
+      "({.x}/{n_batches_val}): {usethis::ui_value('val_batch-{{.x}}.qs')} written on disk at {usethis::ui_code(val_file)}."
     )
     val_file
   })
   rm(n_val, gen_val, val_generator)
 
-  list(train_files = train_files, val_files = val_files) |>
-    readr::write_rds(bfp_path)
+  val_files |>
+    readr::write_rds(val_bfp_path)
 }
-rm(bfp_path)
+rm(val_bfp_path)
 
 
 # define batches generators
-batches_generator <- function(file_paths, type = c("train", "val")) {
-  type = match.arg(type)
-
+batches_generator <- function(file_paths) {
   # start iterator
   i <- 1
 
@@ -186,10 +221,10 @@ batches_generator <- function(file_paths, type = c("train", "val")) {
   }
 }
 
-gen_train_batches <- batches_generator(train_files, "train")
-gen_val_batches <- batches_generator(val_files, "val")
+gen_train_batches <- batches_generator(train_batches_file_paths)
+gen_val_batches <- batches_generator(val_batches_file_paths)
 rm(batches_generator)
-
+gc(FALSE, TRUE);gc(FALSE, TRUE)
 # val_all <- gen_val()
 # rm(gen_val)
 
@@ -208,37 +243,23 @@ rm(batches_generator)
 
 
 
-library(reticulate)
-use_condaenv("tf", required = TRUE)
-# system2("export", "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/")
-
-library(tensorflow)
-library(keras)
-#
-#
-# tf_config()
-# tf_gpu_configured()
-#
-#
-# Sys.sleep(5)
-
 
 
 
 # cine ------------------------------------------------------------
-input_s_cine <- layer_input(
+input_s_cine <- keras::layer_input(
   name = "input_s_cine",
   shape = c(30, 640, 480, 25)
 )
-input_l2c_cine <- layer_input(
+input_l2c_cine <- keras::layer_input(
   name = "input_l2c_cine",
   shape = c(30, 640, 480, 1)
 )
-input_l3c_cine <- layer_input(
+input_l3c_cine <- keras::layer_input(
   name = "input_l3c_cine",
   shape = c(30, 640, 480, 1)
 )
-input_l4c_cine <- layer_input(
+input_l4c_cine <- keras::layer_input(
   name = "input_l4c_cine",
   shape = c(30, 640, 480, 1)
 )
@@ -249,7 +270,8 @@ input_cine <- keras::layer_concatenate(
   axis = 4,
   name = "input_cine"
 ) %>%
-  keras::layer_batch_normalization()
+  keras::layer_batch_normalization()  %>%
+  keras::layer_dropout(rate = 0.2)
 
 cine_l1 <- input_cine %>%
   keras::layer_conv_lstm_2d(
@@ -258,7 +280,9 @@ cine_l1 <- input_cine %>%
     kernel_size = 4L,
     padding = "same",
     input_shape = c(30L, 640L, 480L, 28L),
-    activation = "relu"
+    activation = "relu",
+    dropout = 0.7,
+    recurrent_dropout = 0.7
   ) %>%
   keras::layer_batch_normalization()
 
@@ -275,7 +299,8 @@ cine_l2 <- cine_l1_padded %>%
     strides = c(3L, 2L),
     name = "pooling_cine"
   ) %>%
-  keras::layer_batch_normalization()
+  keras::layer_batch_normalization() %>%
+  keras::layer_dropout(rate = 0.7)
 
 # lge -------------------------------------------------------------
 input_s_lge <- layer_input(
@@ -295,7 +320,8 @@ input_s_lge_pooled <- input_s_lge_padded %>%
     pool_size = c(2L, 2L),
     strides = c(3L, 2L),
     name = "pooling_lge"
-  )
+  ) %>%
+  keras::layer_batch_normalization()
 
 input_l2c_lge <- layer_input(
   name = "input_l2c_lge",
@@ -315,7 +341,8 @@ lge_l0 <- layer_concatenate(
   axis = 3,
   name = "lge_l0"
 ) %>%
-  keras::layer_batch_normalization()
+  keras::layer_batch_normalization() %>%
+  keras::layer_dropout(rate = 0.2)
 
 lge_l1 <- lge_l0 %>%
   keras::layer_conv_2d(
@@ -326,7 +353,8 @@ lge_l1 <- lge_l0 %>%
     input_shape = c(256L, 256L, 28L),
     activation = "relu"
   ) %>%
-  keras::layer_batch_normalization()
+  keras::layer_batch_normalization() %>%
+  keras::layer_dropout(rate = 0.7)
 
 
 
@@ -342,45 +370,47 @@ shared_cnn_l1 <- keras::layer_conv_2d(
 
 cine_l3 <- cine_l2 %>%
   shared_cnn_l1()
-
 lge_l2 <- lge_l1 %>%
   shared_cnn_l1()
-
 merged_l1 <- keras::layer_concatenate(
   c(cine_l3, lge_l2),
   axis = 3,
   name = "merged_l1"
 ) %>%
-  keras::layer_batch_normalization()
+  keras::layer_batch_normalization() %>%
+  keras::layer_dropout(rate = 0.5)
 
 merged_l2 <- merged_l1 %>%
   keras::layer_conv_2d(
     name = "merged_l2",
-    filters = 32L,
+    filters = 16L,
     kernel_size = 2L,
     padding = "same",
     activation = "relu"
   ) %>%
   keras::layer_flatten(name = "flatting") %>%
-  keras::layer_batch_normalization()
+  keras::layer_batch_normalization() %>%
+  keras::layer_dropout(rate = 0.5)
 
 
 # output ----------------------------------------------------------
 dense_l1 <- merged_l2 %>%
   keras::layer_dense(
     name = "dense_l1",
-    units = 16,
+    units = 8,
     activation = "relu"
   ) %>%
-  keras::layer_batch_normalization()
+  keras::layer_batch_normalization() %>%
+  keras::layer_dropout(rate = 0.5)
 
 dense_l2 <- dense_l1 %>%
   keras::layer_dense(
     name = "dense_l2",
-    units = 16,
+    units = 8,
     activation = "relu"
   ) %>%
-  keras::layer_batch_normalization()
+  keras::layer_batch_normalization() %>%
+  keras::layer_dropout(rate = 0.5)
 
 output <- dense_l2 %>%
   keras::layer_dense(
