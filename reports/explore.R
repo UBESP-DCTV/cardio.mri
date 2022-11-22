@@ -17,17 +17,6 @@ library(tensorflow)
 library(keras)
 np <- import("numpy", convert = FALSE)
 
-#
-#
-# tf_config()
-# tf_gpu_configured()
-#
-#
-# Sys.sleep(5)
-
-
-
-
 # load all your custom functions
 list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
   lapply(source) |> invisible()
