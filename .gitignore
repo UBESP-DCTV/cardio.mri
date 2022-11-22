@@ -10,3 +10,11 @@ inst/extdata
 _targets.yaml
 
 *.qs
+
+*.hdf5
+
+history.rds
+
+serialized_model.rds
+
+tictoc_model.rds
