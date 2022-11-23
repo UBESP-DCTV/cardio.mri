@@ -5,21 +5,16 @@
 # setup -----------------------------------------------------------
 
 library(targets)
-library(here)
-library(depigner)
-
-
-library(reticulate)
-use_condaenv("tf", required = TRUE)
- system2("export", "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/")
-
-library(tensorflow)
-library(keras)
-np <- import("numpy", convert = FALSE)
-
 # load all your custom functions
 list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
   lapply(source) |> invisible()
+
+library(reticulate)
+use_condaenv("tf", required = TRUE)
+
+library(tensorflow)
+library(keras)
+
 
 # Code here below -------------------------------------------------
 # use `tar_read(target_name)` to load a target anywhere (note that
@@ -29,206 +24,13 @@ list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
 batch_size_train <- 4
 batch_size_val <- 4
 
-# get train/val sample sizes and corresponding number of batches
-lg4train <- targets::tar_read(lge4Keras_train)
-nodes_name_train <- attr(lg4train, "dimnames")[[1]]
-n_train <- length(nodes_name_train)
-n_batches_train <- ceiling(n_train / batch_size_train)
+gen_train_batches <- batch_size_train |>
+  setup_batch_files("train") |>
+  create_batch_generator()
 
-lg4val <- targets::tar_read(lge4Keras_val)
-nodes_name_val <- attr(lg4val, "dimnames")[[1]]
-n_val <- length(nodes_name_val)
-n_batches_val <- ceiling(n_val / batch_size_val)
-
-rm(lg4train, lg4val, nodes_name_train, nodes_name_val)
-
-# get path of or save batcehs
-train_bfp_path <- glue::glue(
-    "dev/{batch_size_train}-batch_train_file_paths.rds"
-  ) |>
-  here::here()
-
-train_batches_file_paths <- if (fs::file_exists(train_bfp_path)) {
-  readr::read_rds(train_bfp_path)
-} else {
-  train_generator <- function(batch_size) {
-    # start iterator
-    i <- 1
-
-    # return an iterator function
-    function() {
-      current_start_id <- i + batch_size - 1
-
-      l4_lge <- targets::tar_read(lge4Keras_train)
-      nodes_name <- attr(l4_lge, "dimnames")[[1]]
-      last_id <- length(nodes_name)
-
-      # reset iterator if already seen all data
-      if (current_start_id > last_id) i <<- 1
-
-      # iterate current batch's rows
-      rows <- i:min(current_start_id, last_id)
-      records <- nodes_name[rows]
-
-      # update to next iteration
-      i <<- current_start_id + 1
-
-      # find the outcome
-      outcomes <- purrr::map_int(records, ~{
-        as.integer(targets::tar_read_raw(.x)[["output"]][["outcome"]])
-      })
-      y_array <- array(outcomes, dim = c(length(outcomes), 1))
-      rm(outcomes); gc()
-
-      # return the batch
-      list(
-        x = list(
-          input_s_cine = targets::tar_read(cine1Keras_train)[records, , , , , drop = FALSE],
-          input_l2c_cine = targets::tar_read(cine2Keras_train)[records, , , , drop = FALSE],
-          input_l3c_cine = targets::tar_read(cine3Keras_train)[records, , , , drop = FALSE],
-          input_l4c_cine = targets::tar_read(cine4Keras_train)[records, , , , drop = FALSE],
-          input_s_lge = targets::tar_read(lge1Keras_train)[records, , , , drop = FALSE],
-          input_l2c_lge = targets::tar_read(lge2Keras_train)[records, , , drop = FALSE],
-          input_l3c_lge = targets::tar_read(lge3Keras_train)[records, , , drop = FALSE],
-          input_l4c_lge = l4_lge[records, , , drop = FALSE]
-        ),
-        y = y_array
-      )
-    }
-  }
-
-  # retrieve, subset, quick save individual batches for train and val
-  gen_train <- train_generator(batch_size_train)
-  train_files <- purrr::map_chr(seq_len(n_batches_train), ~{
-    train_file <- fs::file_temp(
-      pattern = paste0("train_batch-", .x, "-", n_batches_train, "_"),
-      tmp_dir = here::here("dev/batches") |> fs::dir_create(),
-      ext = "qs"
-    )
-    qs::qsave(gen_train(), train_file, preset = "fast")
-    usethis::ui_done(
-      "({.x}/{n_batches_train}): {usethis::ui_value('train_batch-{{.x}}.qs')} written on disk at {usethis::ui_code(train_file)}."
-    )
-    train_file
-  })
-  rm(n_train, gen_train, train_generator)
-
-  train_files |>
-    readr::write_rds(train_bfp_path)
-}
-rm(train_bfp_path)
-
-
-# get path of or save batcehs
-val_bfp_path <- glue::glue(
-  "dev/{batch_size_val}-batch_val_file_paths.rds"
-) |>
-  here::here()
-
-val_batches_file_paths <- if (fs::file_exists(val_bfp_path)) {
-  readr::read_rds(val_bfp_path)
-} else {
-  val_generator <- function(batch_size) {
-    # start iterator
-    i <- 1
-
-    # return an iterator function
-    function() {
-      current_start_id <- i + batch_size - 1
-
-      l4_lge <- targets::tar_read(lge4Keras_val)
-      nodes_name <- attr(l4_lge, "dimnames")[[1]]
-      last_id <- length(nodes_name)
-
-      # reset iterator if already seen all data
-      if (current_start_id > last_id) i <<- 1
-
-      # iterate current batch's rows
-      rows <- i:min(current_start_id, last_id)
-      records <- nodes_name[rows]
-
-      # update to next iteration
-      i <<- current_start_id + 1
-
-      # find the outcome
-      outcomes <- purrr::map_int(records, ~{
-        as.integer(targets::tar_read_raw(.x)[["output"]][["outcome"]])
-      })
-      y_array <- array(outcomes, dim = c(length(outcomes), 1))
-      rm(outcomes); gc()
-
-      # return the batch
-      list(
-        x = list(
-          input_s_cine = targets::tar_read(cine1Keras_val)[records, , , , , drop = FALSE],
-          input_l2c_cine = targets::tar_read(cine2Keras_val)[records, , , , drop = FALSE],
-          input_l3c_cine = targets::tar_read(cine3Keras_val)[records, , , , drop = FALSE],
-          input_l4c_cine = targets::tar_read(cine4Keras_val)[records, , , , drop = FALSE],
-          input_s_lge = targets::tar_read(lge1Keras_val)[records, , , , drop = FALSE],
-          input_l2c_lge = targets::tar_read(lge2Keras_val)[records, , , drop = FALSE],
-          input_l3c_lge = targets::tar_read(lge3Keras_val)[records, , , drop = FALSE],
-          input_l4c_lge = l4_lge[records, , , drop = FALSE]
-        ),
-        y = y_array
-      )
-    }
-  }
-
-  gen_val <- val_generator(batch_size_val)
-  val_files <- purrr::map_chr(seq_len(n_batches_val), ~{
-    val_file <- fs::file_temp(
-      pattern = paste0("val_batch-", .x, "-", n_batches_val, "_"),
-      tmp_dir = here::here("dev/batches") |> fs::dir_create(),
-      ext = "qs"
-    )
-    qs::qsave(gen_val(), val_file, preset = "fast")
-    usethis::ui_done(
-      "({.x}/{n_batches_val}): {usethis::ui_value('val_batch-{{.x}}.qs')} written on disk at {usethis::ui_code(val_file)}."
-    )
-    val_file
-  })
-  rm(n_val, gen_val, val_generator)
-
-  val_files |>
-    readr::write_rds(val_bfp_path)
-}
-rm(val_bfp_path)
-
-
-# define batches generators
-batches_generator <- function(file_paths) {
-  # start iterator
-  i <- 1
-
-  # return an iterator function
-  function() {
-    # reset iterator if already seen all data
-    if (i > length(file_paths)) i <<- 1
-
-    # return current batch
-    qs::qread(file_paths[[i]], nthreads = 16)
-  }
-}
-
-gen_train_batches <- batches_generator(train_batches_file_paths)
-gen_val_batches <- batches_generator(val_batches_file_paths)
-rm(batches_generator)
-gc(FALSE, TRUE);gc(FALSE, TRUE)
-# val_all <- gen_val()
-# rm(gen_val)
-
-# keras:::as_generator.function
-# train_1 <- gen_train()
-# train_2 <- gen_train()
-# rm(gen_train)
-#
-# val_1 <- gen_val()
-# rm(gen_val)
-
-
-#
-# gen_train <- keras:::as_generator.function()
-# gen_val <- keras:::as_generator.function()
+val_batches_paths <- batch_size_val |>
+  setup_batch_files("val") |>
+  create_batch_generator()
 
 
 
@@ -428,23 +230,20 @@ summary(model)
 model %>%
   compile(
     optimizer = "adam",
-    loss = "binary_crossentropy",
+    loss = coxph_loss(),
     metrics = c("acc")
 )
 
 tic <- Sys.time()
 history <- model %>%
   keras::fit(
-    x = gen_train_batches, # train_1[["x"]], # gen_train,
-    # y = train_1[["y"]],
-    # batch_size = 4,
+    x = gen_train_batches,
     steps_per_epoch = n_batches_train, # 38,
     epochs = 10,
     # shuffle = FALSE,
     validation_data = gen_val_batches, # val_1, #
     validation_steps = n_batches_val,
-    class_weight = list(0.851, 0.149) # ,
-    # view_metrics = FALSE
+    class_weight = list(0.851, 0.149)
   )
 toc <- Sys.time() - tic
 
