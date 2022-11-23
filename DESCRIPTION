@@ -19,14 +19,17 @@ Imports:
     fs,
     glue,
     janitor,
+    keras,
     lubridate,
     magick,
     purrr,
     readr,
     readxl,
+    reticulate,
     rlang (>= 0.4.11),
     stringr,
     targets (>= 0.12.1.9000),
+    tensorflow,
     unheadr,
     withr
 Suggests: 
@@ -66,7 +69,7 @@ Suggests:
     xaringan,
     xaringanExtra (>= 0.5.5),
     xaringanthemer (>= 0.4.1)
-Remotes:  
+Remotes: 
     andrie/deepviz,
     CorradoLanera/autotestthat,
     gadenbuie/metathis,

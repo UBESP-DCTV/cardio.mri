@@ -33,24 +33,26 @@ read_tabular <- function(tabular_path) {
 compose_clinical <- function(x) {
   x |>
     select_clinical_interest() |>
+    tidyr::unite(
+      "name",
+      dplyr::all_of(c("generalita_cognome", "generalita_nome")),
+      remove = FALSE,
+      na.rm = TRUE
+    ) |>
     dplyr::mutate(
-      name = paste(
-        .data[["generalita_cognome"]],
-        .data[["generalita_nome"]]
-      ) |> stringr::str_replace_all(" ", "_"),
       outcome = x[["follow_up_aritmia_ventricolare"]] == 1,
       fup = x[["follow_up_mesi_follow_up"]]
     ) |>
     dplyr::select(
-      - .data[["generalita_cognome"]],
-      - .data[["generalita_nome"]],
-      - .data[["follow_up_aritmia_ventricolare"]],
-      - .data[["follow_up_mesi_follow_up"]]
+      -dplyr::all_of(c(
+        "generalita_cognome", "generalita_nome",
+        "follow_up_aritmia_ventricolare", "follow_up_mesi_follow_up"
+      ))
     )
 }
 
 match_mri_out <- function(mri, clinical) {
-  current_name <- attributes(mri[[1]])[["mri_info"]][["name"]]
+  current_name <- attributes(mri[[1]][[1]])[["mri_info"]][["name"]]
   case_output <- clinical |>
     dplyr::filter(
       purrr::map_lgl(
@@ -75,45 +77,39 @@ match_mri_out <- function(mri, clinical) {
     }
 
     mri$clinical <- case_output |>
-      dplyr::select(
-        -.data[["outcome"]],
-        -.data[["fup"]]
-      )
+      dplyr::select(-dplyr::all_of(c("outcome", "fup")))
     mri$output <- case_output |>
-      dplyr::select(
-        .data[["outcome"]],
-        .data[["fup"]]
-      )
+      dplyr::select(dplyr::all_of(c("outcome", "fup")))
     mri
 }
 
 select_clinical_interest <- function(x) {
   x |>
-    dplyr::select(
-      .data[["generalita_cognome"]],
-      .data[["generalita_nome"]],
+    dplyr::select(dplyr::all_of(c(
+      "generalita_cognome",
+      "generalita_nome",
 
-      .data[["generalita_eta_auto"]],
-      .data[["generalita_sesso"]],
-      .data[["generalita_peso_kg"]],
-      .data[["generalita_altezza_m"]],
+      "generalita_eta_auto",
+      "generalita_sesso",
+      "generalita_peso_kg",
+      "generalita_altezza_m",
 
-      .data[["generalita_dislipidemia"]],
-      .data[["generalita_ipertensione_arteriosa"]],
-      .data[["generalita_fumatore"]],
-      .data[["generalita_diabete_mellito"]],
-      .data[["generalita_familiarita_cad"]],
-      .data[["generalita_familiarita_cmp"]],
-      .data[["generalita_familiarita_per_scd"]],
-      .data[["generalita_bpco"]],
-      .data[["generalita_creatinina_umol_l"]],
-      .data[["generalita_nyha_rm"]],
-      .data[["laboratorio_nt_pro_bnp_pg_l"]],
-      .data[["ecg_device_ritmo_sinusale"]],
-      .data[["ecg_device_fibrillazione_flutter_atriale"]],
-      .data[["ecg_device_bb_sx"]],
-      .data[["follow_up_data_follow_up_aritmia"]],
-      .data[["follow_up_aritmia_ventricolare"]],
-      .data[["follow_up_mesi_follow_up"]]
-    )
+      "generalita_dislipidemia",
+      "generalita_ipertensione_arteriosa",
+      "generalita_fumatore",
+      "generalita_diabete_mellito",
+      "generalita_familiarita_cad",
+      "generalita_familiarita_cmp",
+      "generalita_familiarita_per_scd",
+      "generalita_bpco",
+      "generalita_creatinina_umol_l",
+      "generalita_nyha_rm",
+      "laboratorio_nt_pro_bnp_pg_l",
+      "ecg_device_ritmo_sinusale",
+      "ecg_device_fibrillazione_flutter_atriale",
+      "ecg_device_bb_sx",
+      "follow_up_data_follow_up_aritmia",
+      "follow_up_aritmia_ventricolare",
+      "follow_up_mesi_follow_up"
+    )))
 }

@@ -39,22 +39,46 @@ def logsumexp_masked(risk_scores: tf.Tensor,
 
 # functions -------------------------------------------------------
 coxph_loss <- function(
-    event_riskset,
-    predictions
+    y_true,
+    y_pred
 ) {
-  event <- event_riskset[["event"]]
-  riskset <- event_riskset[["riskset"]]
+  event <- y_true[["event"]]
+  # cat("event:\n")
+  # print(event)
+  # cat("\n\n")
 
-  event <- tf$cast(event, predictions$dtype)
+  riskset <- y_true[["riskset"]]
+  cat("riskset: \n")
+  print(riskset)
+  cat("\n\n")
+
+  predictions <- y_pred
+  # cat("predictions: \n")
+  # print(predictions)
+  # cat("\n\n")
+
+  event <- tf$cast(event, y_pred$dtype)
+  # cat("casted event: \n")
+  # print(event)
+  # cat("\n\n")
 
 
   predictions <- safe_normalize(predictions)
+  # cat("normalized predictions: \n")
+  # print(predictions)
+  # cat("\n\n")
 
   pred_t <- tf$transpose(predictions)
+  cat("transposed pred_t: \n")
+  print(pred_t)
+  cat("\n\n")
 
   rr <- logsumexp_masked(
     pred_t, riskset, axis = 1L, keepdims = TRUE
   )
+  cat("rr: \n")
+  print(rr)
+  cat("\n\n")
 
   tf$math$multiply(event, rr - predictions)
 }
@@ -88,12 +112,6 @@ logsumexp_masked <- function(
 
   risk_score_shift <- tf$math$subtract(risk_scores_masked, amax)
 
-  print(mask)
-  print(mask_f)
-  print(risk_score)
-  print(risk_scores_masked)
-  print(risk_score_shift)
-
   exp_masked <- tf$math$multiply(tf$math$exp(risk_score_shift),  mask_f)
   exp_sum <- tf$reduce_sum(
     exp_masked,
@@ -110,23 +128,31 @@ logsumexp_masked <- function(
 
 
 .make_riskset <- function(time) {
-  out_order <- np$argsort(np$subtract(0, time), kind = "mergesort") |>
-    py_to_r() |>
-    as.integer()
-  n_samples <- length(time)
-  risk_set <- np$zeros(c(n_samples, n_samples), dtype = np$bool_) |>
-    py_to_r() |>
-    as.matrix()
+  time <- np$array(time)
+  out_order <- np$argsort(np$subtract(0, time), kind = "mergesort")
 
+  n_samples <- length(time)
+  risk_set <- np$zeros(c(n_samples, n_samples), dtype = np$bool_)
+
+  risk_set <- py_to_r(risk_set)
+  out_order <- py_to_r(out_order)
+  # print(out_order)
+  # print(time)
   for (i in seq_along(out_order)) {
+    # cat("!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    # cat("i: ", i, "\n")
     ti <- time[out_order[i]]
+    # cat("ti: ", py_to_r(ti), "\n")
     k <- i
-    while (k < n_samples && ti == time[out_order[k]]) {
+    # cat("k: ", k, "\n")
+    while (k <= n_samples && ti == time[out_order[k]]) {
       k <- k + 1L
+      # cat("k: ", k, "\n")
     }
 
     risk_set[out_order[i] + 1, out_order[seq_len(k - 1)] + 1] <- TRUE
-    print(risk_set)
+    # print(risk_set)
+    # cat("???????????????????????????????\n\n")
   }
   risk_set
 }
@@ -137,10 +163,12 @@ logsumexp_masked <- function(
 
 
 example_original_y <- list(
-  event = np$array(array(c(1L, 0L, 0L, 1L, 1L, 1L, 0L), dim = c(7, 1))),
-  time = np$array(c(12, 15, 37, 24, 39, 14, 11))
+  event = c(1L, 0L, 0L, 1L, 1L, 1L, 0L),
+  time = c(12, 15, 37, 24, 39, 14, 11)
 )
-riskset <- .make_riskset(example_original_y$time)
-er <- list(event = example_original_y$event, riskset = riskset)
-coxph_loss(er, example_original_y$time)
+er <- list(
+  event = np$array(array(example_original_y$event, dim = c(7, 1))),
+  riskset = .make_riskset(example_original_y$time)
+)
+coxph_loss(er, np$array(array(example_original_y$time, dim = c(7, 1))))
 

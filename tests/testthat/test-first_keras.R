@@ -68,7 +68,7 @@ test_that("merge_cine_1 works", {
   pad_a <- pad_array(a, base_dim)
   res <- merge_cine_short(list(a = a, b = b), dims = base_dim)
 
-  mt_first_pad <- pad_array(mt[[1]], out_dims = c(640, 480, 30, 25))
+  mt_first_pad <- pad_array(mt[[1]], out_dims = c(30, 640, 480, 25))
   res_mt <- merge_cine_short(mt)
 
 

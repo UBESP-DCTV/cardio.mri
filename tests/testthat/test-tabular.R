@@ -37,7 +37,7 @@ test_that("correct data type imported", {
 
 test_that("compose_clinical works", {
   # setup
-  db <- targets::tar_read(tabular)
+  db <- targets::tar_read(tabular_raw)
 
   # evaluate
   out <- compose_clinical(db)
@@ -48,8 +48,8 @@ test_that("compose_clinical works", {
 
 test_that("compose outcome works", {
   # setup
-  db <- targets::tar_read(mris_b381672b)
-  out <- targets::tar_read(tabular) |>
+  db <- targets::tar_read(mris, branches = 1)
+  out <- targets::tar_read(tabular_raw) |>
     compose_clinical()
 
   # evaluate
@@ -60,5 +60,5 @@ test_that("compose outcome works", {
   expect_tibble(matched[["clinical"]])
 
   matched[["clinical"]][["name"]] |>
-    expect_equal(attributes(db[[1]])[["mri_info"]][["name"]])
+    expect_equal(attributes(db[[1]][[1]])[["mri_info"]][["name"]])
 })

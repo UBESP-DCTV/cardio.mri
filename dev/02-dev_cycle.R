@@ -3,7 +3,7 @@
 
 prj_pkgs <- c(
   "abind", "av", "fs", "glue", "magick", "purrr", "readr", "stringr",
-  "targets", "withr"
+  "targets", "withr", "reticulate", "tensorflow", "keras"
 )
 dev_pkg <- c("littler")
 gh_prj_pkgs <- c("andrie/deepviz")
@@ -34,8 +34,11 @@ renv::status()
 ## `R/functions.R`, you can create other couple of test/function-script
 ## by running the following lines of code as needed.
 
-# usethis::use_test("<my_fun>")
-# usethis::use_r(<"my_fun">)
+"phcox_loss" |>
+  usethis::use_test() |>
+  basename() |>
+  stringr::str_remove("test-") |>
+  usethis::use_r()
 
 
 
