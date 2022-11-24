@@ -6,11 +6,12 @@
 
 library(targets)
 # load all your custom functions
-list.files(here("R"), pattern = "\\.R$", full.names = TRUE) |>
+list.files(here::here("R"), pattern = "\\.R$", full.names = TRUE) |>
   lapply(source) |> invisible()
 
 library(reticulate)
 use_condaenv("tf", required = TRUE)
+np <- reticulate::import("numpy", convert = FALSE)
 
 library(tensorflow)
 library(keras)
@@ -21,18 +22,14 @@ library(keras)
 # `target_name` is NOT quoted!)
 
 # define batch sizes
-batch_size_train <- 4
-batch_size_val <- 4
+batch_size_train <- 6
+batch_size_val <- 6
 
-gen_train_batches <- batch_size_train |>
-  setup_batch_files("train") |>
-  create_batch_generator()
+train_batches_paths <- setup_batch_files(batch_size_train, "train")
+gen_train_batches <- create_batch_generator(train_batches_paths)
 
-val_batches_paths <- batch_size_val |>
-  setup_batch_files("val") |>
-  create_batch_generator()
-
-
+val_batches_paths <- setup_batch_files(batch_size_val, "val")
+gen_val_batches <- create_batch_generator(val_batches_paths)
 
 
 
@@ -207,7 +204,7 @@ output <- dense_l2 %>%
   keras::layer_dense(
     name = "output",
     units = 1,
-    activation = "sigmoid"
+    activation = "linear"
   )
 
 
@@ -227,23 +224,52 @@ summary(model)
 #   plot(model, show_shapes = TRUE, show_layer_names = TRUE)
 # }
 
+
+# https://github.com/keras-team/keras/issues/16291
+# https://stackoverflow.com/questions/68354367/getting-an-error-when-using-tf-keras-metrics-mean-in-functional-keras-api
+py_run_string('
+from typing import Any, Dict, Iterable, Sequence, Tuple, Optional, Union
+import tensorflow as tf
+from sksurv.metrics import concordance_index_censored
+
+class FixedMean(tf.keras.metrics.Mean):
+  def update_state(self, y_true, y_pred, sample_weight=None):
+      super().update_state(y_pred, sample_weight=sample_weight)
+
+def cindex_score(y_true, y_pred):
+
+    g = tf.subtract(tf.expand_dims(y_pred, -1), y_pred)
+    g = tf.cast(g == 0.0, tf.float32) * 0.5 + tf.cast(g > 0.0, tf.float32)
+
+    f = tf.subtract(tf.expand_dims(y_true[1], -1), y_true[1]) > 0.0
+    f = tf.compat.v1.matrix_band_part(tf.cast(f, tf.float32), -1, 0)
+
+    g = tf.reduce_sum(tf.multiply(g, f))
+    f = tf.reduce_sum(f)
+
+    return tf.where(tf.equal(g, 0), 0.0, g/f)
+')
+
+FixedMean <- reticulate::py_to_r(py$FixedMean)
+cindex_score <- reticulate::py_to_r(py$cindex_score)
+
 model %>%
   compile(
     optimizer = "adam",
-    loss = coxph_loss(),
-    metrics = c("acc")
+    loss = coxph_loss,
+    metrics = list(FixedMean(), cindex_score)
 )
 
 tic <- Sys.time()
 history <- model %>%
   keras::fit(
-    x = gen_train_batches,
-    steps_per_epoch = n_batches_train, # 38,
+    x = gen_train_batches, # 4
+    steps_per_epoch = length(train_batches_paths), # 19,
     epochs = 10,
     # shuffle = FALSE,
-    validation_data = gen_val_batches, # val_1, #
-    validation_steps = n_batches_val,
-    class_weight = list(0.851, 0.149)
+    validation_data = gen_val_batches,
+    validation_steps = length(val_batches_paths)#,
+#    class_weight = list(0.851, 0.149)
   )
 toc <- Sys.time() - tic
 

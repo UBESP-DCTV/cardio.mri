@@ -24,22 +24,22 @@
 #'
 #' @examples
 #' example_original_y <- list(
-#'   event = c(1L, 0L, 0L, 1L, 1L, 1L, 0L),
-#'   time = c(12, 15, 37, 24, 39, 14, 11)
+#'   c(1L, 0L, 0L, 1L, 1L, 1L, 0L),
+#'   c(12, 15, 37, 24, 39, 14, 11)
 #' )
 #' y_true <- list(
-#'   event = np$array(array(example_original_y$event, dim = c(7, 1))),
-#'   riskset = make_riskset(example_original_y$time)
+#'   array(example_original_y[[1]], dim = c(7, 1)),
+#'   make_riskset(example_original_y[[2]])
 #' )
-#' y_pred <- np$array(array(example_original_y$time, dim = c(7, 1)))
+#' y_pred <- np$array(array(example_original_y[[2]], dim = c(7, 1)))
 #' batch_losses <- coxph_loss(y_true, y_pred)
 #' batch_loss <- mean(reticulate::py_to_r(batch_losses))
 coxph_loss <- function(
     y_true,
     y_pred
 ) {
-  event <- y_true[["event"]]
-  riskset <- y_true[["riskset"]]
+  event <- y_true[[1]]
+  riskset <- y_true[[2]]
 
   event <- tf$cast(event, y_pred$dtype)
   predictions <- safe_normalize(y_pred)
@@ -57,7 +57,7 @@ coxph_loss <- function(
 #' Safe normalize
 #'
 #' If there are negative scores, it slide everything to have a minimum
-#' in zero. In fact, only concordance order with risk scores metters.
+#' in zero. In fact, only concordance order with risk scores matters.
 #'
 #' @param x (2D tensor) single column 2D array, i.e. one row per
 #'   subject, and onyl the column for the predicted risk score
@@ -101,7 +101,7 @@ safe_normalize <- function(x) {
 #'
 #' @examples
 #' time <- c(12, 15, 37, 24, 39, 14, 11)
-#' .make_riskset(time)
+#' make_riskset(time)
 make_riskset <- function(time) {
   np <- reticulate::import("numpy", convert = FALSE)
 

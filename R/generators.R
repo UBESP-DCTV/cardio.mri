@@ -74,8 +74,10 @@ batch_generator <- function(
 
     current_last_id <- i + batch_size - 1
 
-    l4_lge <- targets::tar_read_raw(glue::glue("lge4Keras_{type}"))
-    nodes_name <- attr(l4_lge, "dimnames")[[1]]
+    nodes_name <- attr(
+      targets::tar_read_raw(glue::glue("lge4Keras_{type}")),
+      "dimnames"
+    )[[1]]
     last_id <- length(nodes_name)
 
     # reset iterator if already seen all data
@@ -95,32 +97,47 @@ batch_generator <- function(
     events <- as.integer(outcomes[["outcome"]])
     time <- outcomes[["fup"]]
     y_true <- list(
-      event = np$array(array(events, dim = c(length(events), 1L))
+      array(events, dim = c(length(events), 1L)
       ),
-      riskset = make_riskset(time)
+      make_riskset(time)
     )
     rm(outcomes, events, time)
 
     # return the batch
     list(
       x = list(
-        input_s_cine = targets::tar_read_raw(
-          glue::glue("cine1Keras_{type}"))[records, , , , , drop = FALSE],
-        input_l2c_cine = targets::tar_read_raw(
-          glue::glue("cine2Keras_{type}"))[records, , , , drop = FALSE],
-        input_l3c_cine = targets::tar_read_raw(
-          glue::glue("cine3Keras_{type}"))[records, , , , drop = FALSE],
-        input_l4c_cine = targets::tar_read_raw(
-          glue::glue("cine4Keras_{type}"))[records, , , , drop = FALSE],
-        input_s_lge = targets::tar_read_raw(
-          glue::glue("lge1Keras_{type}"))[records, , , , drop = FALSE],
-        input_l2c_lge = targets::tar_read_raw(
-          glue::glue("lge2Keras_{type}"))[records, , , drop = FALSE],
-        input_l3c_lge = targets::tar_read_raw(
-          glue::glue("lge3Keras_{type}"))[records, , , drop = FALSE],
-        input_l4c_lge = l4_lge[records, , , drop = FALSE]
+        input_s_cine = subset_data("cine", "1", type, records),
+        input_l2c_cine = subset_data("cine", "2", type, records),
+        input_l3c_cine = subset_data("cine", "3", type, records),
+        input_l4c_cine = subset_data("cine", "4", type, records),
+        input_s_lge = subset_data("lge", "1", type, records),
+        input_l2c_lge = subset_data("lge", "2", type, records),
+        input_l3c_lge = subset_data("lge", "3", type, records),
+        input_l4c_lge = subset_data("lge", "4", type, records)
       ),
       y_true = y_true
     )
+  }
+}
+
+
+subset_data <- function(
+    cinelge = c("cine", "lge"),
+    ch = c("1", "2", "3", "4"),
+    type = c("train", "val"),
+    records
+) {
+  cinelge <- match.arg(cinelge)
+  ch <- match.arg(ch)
+  type <- match.arg(type)
+
+  db <- targets::tar_read_raw(glue::glue("{cinelge}{ch}Keras_{type}"))
+
+  if (cinelge == "cine" && ch == 1) {
+    db[records, , , , , drop = FALSE]
+  } else if (cinelge == "lge" && ch != 1) {
+    db[records, , , drop = FALSE]
+  } else {
+    db[records, , , , drop = FALSE]
   }
 }
