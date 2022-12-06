@@ -38,15 +38,45 @@ coxph_loss <- function(
     y_true,
     y_pred
 ) {
-  event <- y_true[[1]]
-  riskset <- y_true[[2]]
+  cat(str(y_true))
+  # censored are the negative time
+  event <- (tf$sign(y_true) + 1) / 2
+  time <- tf$abs(y_true)
+  riskset <- make_riskset(time)
+  cat(str(event))
+  cat(str(time))
+  cat(str(riskset))
+
+
 
   event <- tf$cast(event, y_pred$dtype)
   predictions <- safe_normalize(y_pred)
   pred_t <- tf$transpose(predictions)
 
-  rr <- logsumexp_masked(pred_t, riskset, axis = 1L, keepdims = TRUE)
-  tf$math$multiply(event, rr - predictions)
+  # logsumexp_masked -----------------------------------
+  mask_f <- tf$cast(riskset, pred_t$dtype)
+  risk_scores_masked <- tf$math$multiply(pred_t, mask_f)
+  amax <- tf$reduce_max(
+    risk_scores_masked,
+    axis = 1L,
+    keepdims = TRUE
+  )
+  risk_scores_shift <- tf$math$subtract(risk_scores_masked, amax)
+
+  exp_masked <- tf$math$multiply(
+    tf$math$exp(risk_scores_shift),
+    mask_f
+  )
+  exp_sum <- tf$reduce_sum(
+    exp_masked,
+    axis = 1L,
+    keepdims = TRUE
+  )
+  rr <- amax + tf$math$log(exp_sum + 1e-7)
+  # logsumexp_masked -----------------------------------
+
+  # rr <- logsumexp_masked(pred_t, riskset, axis = 1L, keepdims = TRUE)
+  tf$math$multiply(event, rr - predictions) + 1e-7
 }
 
 
@@ -172,6 +202,7 @@ logsumexp_masked <- function(
     keepdims = TRUE
   )
 
+  # risk_scores_shift <- risk_scores_masked
   risk_scores_shift <- tf$math$subtract(risk_scores_masked, amax)
 
   exp_masked <- tf$math$multiply(tf$math$exp(risk_scores_shift),  mask_f)
@@ -180,6 +211,7 @@ logsumexp_masked <- function(
     axis = axis,
     keepdims = TRUE
   )
+  # out <- tf$math$log(exp_sum)
   out <- amax + tf$math$log(exp_sum)
 
   if (!keepdims) {

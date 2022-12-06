@@ -1,17 +1,65 @@
 setup_batch_files <- function(
   batch_size = 4,
   type = c("train", "val"),
-  folder = here::here("dev"),
-  bfp_path = glue::glue("{batch_size}-batch_{type}_paths.rds")
+  random = FALSE,
+  min_events_per_batch = max(2, ceiling(batch_size / 2)),
+  steps_per_epoch = NULL,
+  folder = here::here("dev")
 ) {
   checkmate::qassert(batch_size, "X1(0,)")
   type = match.arg(type)
 
-  lge4 <- targets::tar_read_raw(glue::glue("lge4Keras_{type}"))
-  nodes_name <- attr(lge4, "dimnames")[[1]]
+
+
+  # separate events and censored subjects
+  nodes_name <- attr(
+    targets::tar_read_raw(glue::glue("lge4Keras_{type}")),
+    "dimnames"
+  )[[1]]
+
   n <- length(nodes_name)
   batch_size <- min(batch_size, n)
   n_batches <- ceiling(n / batch_size)
+  bfp_path <- glue::glue("size-{batch_size}_batches_{type}_paths.rds")
+
+  if (random) {
+    usethis::ui_todo("Setup random batches")
+    usethis::ui_info("Batch size: {usethis::ui_value(batch_size)}")
+
+    if (!is.null(steps_per_epoch)) {
+      n_batches <- steps_per_epoch
+    }
+    usethis::ui_info("N batches: {usethis::ui_value(n_batches)}")
+
+    bfp_path <- glue::glue("{n_batches}-random_{bfp_path}")
+    usethis::ui_info("bfp_path: {usethis::ui_value(bfp_path)}")
+
+    usethis::ui_todo("Defining events and censors for batches")
+    are_event_nodes <- purrr::map_lgl(nodes_name, ~{
+      targets::tar_read_raw(.x)[["output"]][["outcome"]]
+    })
+    event_nodes_names <- nodes_name[are_event_nodes]
+    censored_nodes_names <- nodes_name[!are_event_nodes]
+    usethis::ui_done("Events and censors for batches defined.")
+    nodes_name <- list(
+      event_nodes_names = event_nodes_names,
+      censored_nodes_names = censored_nodes_names
+    )
+    min_events_per_batch <- min(
+      min_events_per_batch, batch_size, length(event_nodes_names)
+    )
+    usethis::ui_info(
+      "Min events/batch: {usethis::ui_value(min_events_per_batch)}"
+    )
+  } else {
+    usethis::ui_todo("Setup regular batches")
+    usethis::ui_info("Batch size: {usethis::ui_value(batch_size)}")
+    usethis::ui_info("N batches: {usethis::ui_value(n_batches)}")
+    usethis::ui_info("bfp_path: {usethis::ui_value(bfp_path)}")
+  }
+
+
+
 
   fs::dir_create(folder)
   batches_file_paths <- file.path(folder, bfp_path) |>
@@ -23,11 +71,21 @@ setup_batch_files <- function(
     return(readr::read_rds(batches_file_paths))
   } else {
     usethis::ui_info("Batches files does not exists yet. We'll create them.")
-    gen <- batch_generator(batch_size, type = type)
+    gen <- batch_generator(
+      nodes_name = nodes_name,
+      batch_size = batch_size,
+      type = type,
+      random = random,
+      min_events_per_batch = min_events_per_batch,
+      steps_per_epoch = n_batches
+    )
 
     purrr::map_chr(seq_len(n_batches), ~{
+      tag_random <- if (random) "random_" else ""
       file <- fs::file_temp(
-        pattern = glue::glue("{type}_batch-{n_batches}-{.x}_"),
+        pattern = glue::glue(
+          "{tag_random}{type}_batch-{n_batches}-{.x}_"
+        ),
         tmp_dir = here::here(folder, "batches") |> fs::dir_create(),
         ext = "qs"
       )
@@ -52,40 +110,67 @@ create_batch_generator <- function(batches_paths) {
     if (i > length(batches_paths)) i <<- 1
 
     # return current batch
-    qs::qread(
+    res <- qs::qread(
       batches_paths[[i]],
       nthreads = parallelly::availableCores("multicore", omit = 2)
     )
+
+    i <<- i + 1
+    res
   }
 }
 
 
 
 batch_generator <- function(
+    nodes_name,
     batch_size,
-    type = c("train", "val")
+    type = c("train", "val"),
+    random = FALSE,
+    min_events_per_batch = max(2, ceiling(batch_size / 2)),
+    steps_per_epoch = NULL
 ) {
-  # start iterator
+
+  last_id <- if (random) {
+    n_batches <- if (is.null(steps_per_epoch)) {
+      ceiling(length(unlist(nodes_name)) / batch_size)
+    } else {
+      steps_per_epoch
+    }
+    batch_size * n_batches
+  } else {
+    length(nodes_name)
+  }
+
+  # start iterator and clean up iterator container environment
   i <- 1
+  gc()
 
   # return an iterator function
   function() {
     np <- reticulate::import("numpy", convert = FALSE)
 
-    current_last_id <- i + batch_size - 1
-
-    nodes_name <- attr(
-      targets::tar_read_raw(glue::glue("lge4Keras_{type}")),
-      "dimnames"
-    )[[1]]
-    last_id <- length(nodes_name)
-
     # reset iterator if already seen all data
+    current_last_id <- i + batch_size - 1
     if (current_last_id > last_id) i <<- 1
 
-    # iterate current batch's rows
-    rows <- i:min(current_last_id, last_id)
-    records <- nodes_name[rows]
+    records <- if (random) {
+      event_nodes_names <- nodes_name[["event_nodes_names"]]
+      censored_nodes_names <- nodes_name[["censored_nodes_names"]]
+
+      event_sampled <- sample(event_nodes_names, min_events_per_batch)
+      other_sampled <- setdiff(event_nodes_names, event_sampled) |>
+        c(censored_nodes_names) |>
+        sample(batch_size - length(event_sampled))
+
+      c(event_sampled, other_sampled) |>
+        sample(batch_size)
+    } else {
+      # iterate current batch's rows
+      rows <- i:min(current_last_id, last_id)
+      records <- nodes_name[rows]
+    }
+
 
     # update to next iteration
     i <<- current_last_id + 1
@@ -94,13 +179,10 @@ batch_generator <- function(
     outcomes <- purrr::map_df(records, ~{
       targets::tar_read_raw(.x)[["output"]]
     })
-    events <- as.integer(outcomes[["outcome"]])
+    # mark -1 as censored
+    events <- (as.integer(outcomes[["outcome"]]) * 2) - 1
     time <- outcomes[["fup"]]
-    y_true <- list(
-      array(events, dim = c(length(events), 1L)
-      ),
-      make_riskset(time)
-    )
+    y_true <- array(events * time, dim = c(length(events), 1L))
     rm(outcomes, events, time)
 
     # return the batch

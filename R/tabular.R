@@ -40,6 +40,7 @@ compose_clinical <- function(x) {
       na.rm = TRUE
     ) |>
     dplyr::mutate(
+      name = stringr::str_replace_all(.data[["name"]], " +", "_"),
       outcome = x[["follow_up_aritmia_ventricolare"]] == 1,
       fup = x[["follow_up_mesi_follow_up"]]
     ) |>
@@ -52,7 +53,8 @@ compose_clinical <- function(x) {
 }
 
 match_mri_out <- function(mri, clinical) {
-  current_name <- attributes(mri[[1]][[1]])[["mri_info"]][["name"]]
+  current_name <- attributes(mri[[1]])[["mri_info"]][["name"]] |>
+    stringr::str_replace_all(" +", "_")
   case_output <- clinical |>
     dplyr::filter(
       purrr::map_lgl(
