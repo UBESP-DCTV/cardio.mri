@@ -1,8 +1,19 @@
-## Use this script to run exploratory code maybe before to put it into
-## the pipeline
 
-debug <- TRUE
+on_cpu <- TRUE
+debug <- FALSE
+
+epochs <- 10
+
+batch_size_train <- 6
+batch_size_val <- 6
+
+min_events <- 4
+
+n_batch_train <- 32
+n_batch_val <- 16
+
 gc()
+
 # setup -----------------------------------------------------------
 
 library(targets)
@@ -14,8 +25,15 @@ library(reticulate)
 use_condaenv("tf", required = TRUE)
 np <- reticulate::import("numpy", convert = FALSE)
 
+if (on_cpu) {
+  Sys.setenv("CUDA_VISIBLE_DEVICES" = -1)
+  reticulate::py_run_string('
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+# ')
+}
+
 library(tensorflow)
-# tfe_enable_eager_execution()
 library(keras)
 
 tf <- reticulate::import("tensorflow", convert = TRUE)
@@ -25,16 +43,14 @@ skm <- reticulate::import("sksurv.metrics", convert = TRUE)
 
 # Setup -----------------------------------------------------------
 # define batch sizes
-batch_size_train <- 5
-batch_size_val <- 5
 
 # train_batches_paths <- setup_batch_files(batch_size_train, "train")
 train_batches_paths <- setup_batch_files(
   batch_size_train,
   type = "train",
   random = TRUE,
-  min_events_per_batch = 2,
-  steps_per_epoch = 16
+  min_events_per_batch = min_events,
+  steps_per_epoch = n_batch_train
 )
 gen_train_batches <- create_batch_generator(train_batches_paths)
 
@@ -43,10 +59,12 @@ val_batches_paths <- setup_batch_files(
   batch_size_val,
   type = "val",
   random = TRUE,
-  min_events_per_batch = 2,
-  steps_per_epoch = 8
+  min_events_per_batch = min_events,
+  steps_per_epoch = n_batch_val
 )
 gen_val_batches <- create_batch_generator(val_batches_paths)
+
+
 
 
 
@@ -271,54 +289,46 @@ output_debug <- input_s_cine %>%
 # model -----------------------------------------------------------
 model <- keras::keras_model(
   inputs = c(
-    input_s_cine
-    # input_s_cine, input_l2c_cine, input_l3c_cine, input_l4c_cine,
-    # input_s_lge, input_l2c_lge, input_l3c_lge, input_l4c_lge
+    # input_s_cine
+    input_s_cine, input_l2c_cine, input_l3c_cine, input_l4c_cine,
+    input_s_lge, input_l2c_lge, input_l3c_lge, input_l4c_lge
   ),
-  outputs = output_debug
-  # outputs = output
+  # outputs = output_debug
+  outputs = output
 )
 summary(model)
 
-# if (debug) {
-#   ({ model$weights })
-   tr_1 <- gen_train_batches()
-#   tr_2 <- gen_train_batches()
-#
-   x1 <- tr_1$x
-#   x2 <- tr_2$x
-#
+if (debug) {
+  tr_1 <- gen_train_batches()
+  x1 <- tr_1$x
   y1_true <- tr_1$y_true
 
-#   y2_true <- list(
-#     np$array(tr_2$y_true[[1]]),
-#     np$array(tr_2$y_true[[2]])
-#   )
-#
   y1_pred <- reticulate::r_to_py(predict(model, x1))
   y1_loss <- coxph_loss(y1_true, y1_pred)
-#   print(y1_true)
-#   print(tr_1$y_true[[3]])
-#   print(y1_pred)
-#   print(y1_loss)
-#
-#   y2_pred <- reticulate::r_to_py(predict(model, x2))
-#   y2_loss <- coxph_loss(y2_true, y2_pred)
-#   print(y2_true)
-#   print(tr_2$y_true[[3]])
-#   print(y2_pred)
-#   print(y2_loss)
-# }
+  print(y1_true)
+  print(tr_1$y_true[[3]])
+  print(y1_pred)
+  print(y1_loss)
+
+  y2_pred <- reticulate::r_to_py(predict(model, x2))
+  y2_loss <- coxph_loss(y2_true, y2_pred)
+  print(y2_true)
+  print(tr_2$y_true[[3]])
+  print(y2_pred)
+  print(y2_loss)
+}
 
 
-# keras:::plot.keras.engine.training.Model()
-model |>
-  plot(
-    # show_shapes = TRUE,
-    # show_layer_names = TRUE
-    # expand_nested = TRUE,
-    # show_layer_activations = TRUE,
-  )
+if (FALSE) {
+  keras:::plot.keras.engine.training.Model()
+  model |>
+    plot(
+      # show_shapes = TRUE,
+      # show_layer_names = TRUE
+      # expand_nested = TRUE,
+      # show_layer_activations = TRUE,
+    )
+}
 
 # # https://github.com/keras-team/keras/issues/16291
 # # https://stackoverflow.com/questions/68354367/getting-an-error-when-using-tf-keras-metrics-mean-in-functional-keras-api
@@ -334,36 +344,32 @@ model |>
 # FixedMean <- reticulate::py_to_r(py$FixedMean)
 
 cindex_score <- function(y_true, y_pred) {
-  # cat(str(y_true))
-  # print(y_true)
-  #
+  y_true <- tf$cast(y_true, y_pred$dtype)
+
   # censored are the negative time
   event <- tf$transpose((tf$sign(y_true) + 1) / 2)
   time <- tf$transpose(tf$abs(y_true))
 
+  event <- tf$cast(event, y_pred$dtype)
+  time <- tf$cast(time, y_pred$dtype)
+
   y_pred <- tf$transpose(y_pred)
-  # cat(str(event))
+  event <- tf$squeeze(tf$cast(event, y_pred$dtype), axis = 0L)
 
-  event <- tf$squeeze(tf$cast(event, y_pred$dtype), axis = 0L)$numpy()
-  # cat(str(event))
-  #
-  # mask <- tf$cast(mask, y_pred$dtype)$numpy()
-  # print(mask)
-  #
-  time <- tf$squeeze(tf$cast(time, y_pred$dtype), axis = 0L)$numpy()
-  # cat(str(time))
-  #
-  y_pred <- tf$squeeze(y_pred, axis = 0L)$numpy()
-  print(y_pred)
-
+  time <- tf$squeeze(tf$cast(time, y_pred$dtype), axis = 0L)
+  y_pred <- tf$squeeze(y_pred, axis = 0L)
 
   # Hmisc::rcorr.cens(y_pred, survival::Surv(time, event))[["C Index"]]
-  skm$concordance_index_censored(event == 1L, time, y_pred)[[1L]]
+  res <- skm$concordance_index_censored(
+    event == 1L,
+    time,
+    tf$exp(y_pred)
+  )[[1L]]
+  res <- tf$cast(res, y_pred$dtype)
+  tf$constant(res)
 }
-cindex_score(
-  y1_true,
-  y1_pred
-)
+
+if (debug) cindex_score(y1_true, y1_pred)
 
 
 
@@ -385,7 +391,7 @@ cindex_score(
       loss = coxph_loss,
       metrics = list(
         # FixedMean(),
-        custom_metric("C-index", cindex_score)
+        custom_metric("C", cindex_score)
       )
     )
 }
@@ -393,20 +399,20 @@ cindex_score(
 
 {
   run_id <- glue::glue(paste0(
-    "{'DEBUG-'[debug]}",
+    "{if (debug) 'DEBUG-' else ''}",
     "run_{stringr::str_remove_all(lubridate::now(), '\\\\W')}-",
-    "16x7gte4"
+    "{n_batch_train}x{batch_size_train}gte{min_events}events"
   ))
   # tb_path <- here::here("logs", run_id)
   # tensorboard(tb_path)
   tic <- Sys.time()
   history <- model %>%
     keras::fit(
-      x = gen_train_batches, # 4
-      steps_per_epoch = 2,# length(train_batches_paths), # 19,
-      epochs = 2#,
-      # validation_data = gen_val_batches,
-      # validation_steps = length(val_batches_paths)#,
+      x = gen_train_batches,
+      steps_per_epoch = n_batch_train,
+      epochs = epochs,
+      validation_data = gen_val_batches,
+      validation_steps = n_batch_val#,
       # view_metrics = FALSE
       # callbacks = keras::callback_tensorboard(
       #   tb_path
@@ -415,17 +421,17 @@ cindex_score(
       # #   update_freq = "batch",
       # #   profile_batch = 1
       # )
-    #   # #    class_weight = list(0.851, 0.149)
     )
   (toc <- Sys.time() - tic)
 }
 
+# predict(model, aaa)
 
-# readr::write_rds(toc, glue::glue("{run_id}_tictoc_model.rds"))
-# readr::write_rds(history, glue::glue("{run_id}_history.rds"))
-# keras::save_model_hdf5(model, glue::glue("{run_id}_model.hdf5"))
-# keras::serialize_model(model) |>
-#   readr::write_rds(glue::glue("{run_id}_serialized_model.rds"))
+readr::write_rds(toc, glue::glue("{run_id}_tictoc_model.rds"))
+readr::write_rds(history, glue::glue("{run_id}_history.rds"))
+keras::save_model_hdf5(model, glue::glue("{run_id}_model.hdf5"))
+keras::serialize_model(model) |>
+  readr::write_rds(glue::glue("{run_id}_serialized_model.rds"))
 
 
 

@@ -38,15 +38,17 @@ coxph_loss <- function(
     y_true,
     y_pred
 ) {
-  cat(str(y_true))
+  # cat(str(y_true))
   # censored are the negative time
+  y_true <- tf$cast(y_true, y_pred$dtype)
+
   event <- (tf$sign(y_true) + 1) / 2
   time <- tf$abs(y_true)
   riskset <- make_riskset(time)
-  cat(str(event))
-  cat(str(time))
-  cat(str(riskset))
-
+  # cat(str(event))
+  # cat(str(time))
+  # cat(str(riskset))
+  #
 
 
   event <- tf$cast(event, y_pred$dtype)
@@ -134,7 +136,6 @@ safe_normalize <- function(x) {
 #' make_riskset(time)
 make_riskset <- function(time) {
   np <- reticulate::import("numpy", convert = FALSE)
-
   time <- np$array(time)
   out_order <- np$argsort(np$subtract(0, time), kind = "mergesort")
 

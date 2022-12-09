@@ -18,3 +18,17 @@ history.rds
 serialized_model.rds
 
 tictoc_model.rds
+
+done/
+
+dev/2-random_size-4_batches_train_paths.rds
+
+dev/2-random_size-4_batches_val_paths.rds
+
+dev/32-random_size-4_batches_train_paths.rds
+
+dev/32-random_size-6_batches_train_paths.rds
+
+dev/16-random_size-4_batches_val_paths.rds
+
+dev/16-random_size-6_batches_val_paths.rds
