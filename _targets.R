@@ -235,7 +235,35 @@ list(
     lge4Keras_test,
     merge_lge_long(matchedT[["lge-4"]][testIdx]),
     format = "qs"
-  )
+  ),
+
+  tar_target(
+    clinicKeras_train,
+    merge_clinic(matchedT[["clinical"]][trainIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    clinicKeras_val,
+    merge_clinic(matchedT[["clinical"]][valIdx]),
+    format = "qs"
+  ),
+  tar_target(
+    clinicKeras_test,
+    merge_clinic(matchedT[["clinical"]][testIdx]),
+    format = "qs"
+  ),
+
+  tar_file(kerasCovarPath, get_keras_model_path("covar")),
+  tar_file(kerasNoCovarPath, get_keras_model_path("no-covar")),
+
+  tar_target(predTrainCovar, pred_keras(kerasCovarPath, "train")),
+  tar_target(predValCovar, pred_keras(kerasCovarPath, "val")),
+  tar_target(predTestCovar, pred_keras(kerasCovarPath, "test")),
+  tar_target(predTrainNoCovar, pred_keras(kerasNoCovarPath, "train")),
+  tar_target(predValNoCovar, pred_keras(kerasNoCovarPath, "val")),
+  tar_target(predTestNoCovar, pred_keras(kerasNoCovarPath, "test"))
+
+
 
 
 # Report ----------------------------------------------------------

@@ -1,6 +1,6 @@
 setup_batch_files <- function(
   batch_size = 4,
-  type = c("train", "val"),
+  type = c("train", "val", "test"),
   random = FALSE,
   min_events_per_batch = max(2, ceiling(batch_size / 2)),
   steps_per_epoch = NULL,
@@ -13,7 +13,7 @@ setup_batch_files <- function(
 
   # separate events and censored subjects
   nodes_name <- attr(
-    targets::tar_read_raw(glue::glue("lge4Keras_{type}")),
+    targets::tar_read_raw(glue::glue("clinicKeras_{type}")),
     "dimnames"
   )[[1]]
 
@@ -125,7 +125,7 @@ create_batch_generator <- function(batches_paths) {
 batch_generator <- function(
     nodes_name,
     batch_size,
-    type = c("train", "val"),
+    type = c("train", "val", "test"),
     random = FALSE,
     min_events_per_batch = max(2, ceiling(batch_size / 2)),
     steps_per_epoch = NULL
@@ -195,7 +195,8 @@ batch_generator <- function(
         input_s_lge = subset_data("lge", "1", type, records),
         input_l2c_lge = subset_data("lge", "2", type, records),
         input_l3c_lge = subset_data("lge", "3", type, records),
-        input_l4c_lge = subset_data("lge", "4", type, records)
+        input_l4c_lge = subset_data("lge", "4", type, records),
+        input_clinic = subset_data("clinic", "", type, records)
       ),
       y_true = y_true
     )
@@ -204,18 +205,21 @@ batch_generator <- function(
 
 
 subset_data <- function(
-    cinelge = c("cine", "lge"),
-    ch = c("1", "2", "3", "4"),
-    type = c("train", "val"),
+    cinelge = c("cine", "lge", "clinic"),
+    ch = c("1", "2", "3", "4", ""),
+    type = c("train", "val", "test"),
     records
 ) {
   cinelge <- match.arg(cinelge)
-  ch <- match.arg(ch)
+  stopifnot(length(ch) == 1, ch %in% c("1", "2", "3", "4", ""))
   type <- match.arg(type)
+
 
   db <- targets::tar_read_raw(glue::glue("{cinelge}{ch}Keras_{type}"))
 
-  if (cinelge == "cine" && ch == 1) {
+  if (cinelge == "clinic") {
+    db[records, , drop = FALSE]
+  } else if (cinelge == "cine" && ch == 1) {
     db[records, , , , , drop = FALSE]
   } else if (cinelge == "lge" && ch != 1) {
     db[records, , , drop = FALSE]

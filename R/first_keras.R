@@ -107,6 +107,34 @@ merge_lge_long <- function(x, dims = c(256, 256)) {
 
 
 
+merge_clinic <- function(x, dims = 18L) {
+  stopifnot(is.list(x))
+  stopifnot(
+    all(purrr::map_lgl(x, ~tibble::is_tibble(.x) || is.null(.x)))
+  )
+
+  n <- length(x)
+  names_to_exclude <- c("name", "follow_up_data_follow_up_aritmia")
+  nms <- setdiff(names(x[[1]]), names_to_exclude)
+
+  res <- array(
+    NA_real_,
+    dim = c(n, dims),
+    dimnames = list(names(x), nms)
+  )
+
+  for (i in seq_len(n)) {
+    res[i, ] <- if (is.null(x[[i]])) {
+      array(-1, dims)
+    } else {
+      unlist(x[[i]][nms])
+    }
+  }
+  res[is.na(res)] <- -1
+  res
+}
+
+
 
 pad_array <- function(
     original_array = array(pad_value),

@@ -30,6 +30,7 @@ Imports:
     stringr,
     targets (>= 0.12.1.9000),
     tensorflow,
+    tibble,
     unheadr,
     withr
 Suggests: 
