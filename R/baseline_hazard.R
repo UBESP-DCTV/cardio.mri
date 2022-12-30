@@ -20,7 +20,7 @@ baseline_hazard <- function(time, status, log_risk) {
   tab_event_time <- data.frame(table(event_time))
 
   times <- as.numeric(levels(tab_event_time[[1L]]))
-  perm <- ord(unique_times)
+  perm <- order(times)
 
   ord_times <- times[perm]
   ord_n_events <- tab_event_time[[2L]][perm]
@@ -37,4 +37,20 @@ baseline_hazard <- function(time, status, log_risk) {
     h0 = h0,
     sd = sqrt(h0_var)
   )
+}
+
+hazard <- function(patient_risk, base_h) {
+  risks <- patient_risk[["risk_score"]] |>
+    purrr::set_names(patient_risk[["record"]])
+  risks |>
+    purrr::imap(~{
+      base_h |>
+        dplyr::mutate(
+          record = .y,
+          h0 = h0,
+          h = h0 * exp(.x),
+          s = exp(-h)
+        ) |>
+        dplyr::left_join(patient_risk, by = "record")
+  })
 }

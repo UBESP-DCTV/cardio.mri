@@ -36,3 +36,9 @@ dev/16-random_size-6_batches_val_paths.rds
 dev/16-random_size-6_batches_val_paths_nocllinic.rds
 
 dev/32-random_size-6_batches_train_paths_nocllinic.rds
+
+run_20221228233857-32x6gte4events-CONTINUE_from_11-2_epochs_history.rds
+
+run_20221228233857-32x6gte4events-CONTINUE_from_11-2_epochs_serialized_model.rds
+
+run_20221228233857-32x6gte4events-CONTINUE_from_11-2_epochs_tictoc_model.rds

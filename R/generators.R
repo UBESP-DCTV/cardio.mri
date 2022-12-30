@@ -36,7 +36,9 @@ setup_batch_files <- function(
 
     usethis::ui_todo("Defining events and censors for batches")
     are_event_nodes <- purrr::map_lgl(nodes_name, ~{
-      targets::tar_read_raw(.x)[["output"]][["outcome"]]
+      res <- targets::tar_read_raw(.x)[["output"]][["outcome"]]
+      gc(FALSE)
+      res
     })
     event_nodes_names <- nodes_name[are_event_nodes]
     censored_nodes_names <- nodes_name[!are_event_nodes]
@@ -90,33 +92,13 @@ setup_batch_files <- function(
         ext = "qs"
       )
       qs::qsave(gen(), file, preset = "fast")
+      gc(FALSE)
       usethis::ui_done(
         "({.x}/{n_batches}): {usethis::ui_value(file)} written on disk."
       )
       file
     }) |>
       readr::write_rds(batches_file_paths)
-  }
-}
-
-
-create_batch_generator <- function(batches_paths) {
-  # start iterator
-  i <- 1
-
-  # return an iterator function
-  function() {
-    # reset iterator if already seen all data
-    if (i > length(batches_paths)) i <<- 1
-
-    # return current batch
-    res <- qs::qread(
-      batches_paths[[i]],
-      nthreads = parallelly::availableCores("multicore", omit = 2)
-    )
-
-    i <<- i + 1
-    res
   }
 }
 
@@ -144,7 +126,7 @@ batch_generator <- function(
 
   # start iterator and clean up iterator container environment
   i <- 1
-  gc()
+  gc(FALSE)
 
   # return an iterator function
   function() {
@@ -177,13 +159,16 @@ batch_generator <- function(
 
     # find the outcome
     outcomes <- purrr::map_df(records, ~{
-      targets::tar_read_raw(.x)[["output"]]
+      res <- targets::tar_read_raw(.x)[["output"]]
+      gc(FALSE)
+      res()
     })
     # mark -1 as censored
     events <- (as.integer(outcomes[["outcome"]]) * 2) - 1
     time <- outcomes[["fup"]]
     y_true <- array(events * time, dim = c(length(events), 1L))
     rm(outcomes, events, time)
+    gc(FALSE)
 
     # return the batch
     list(
@@ -214,16 +199,49 @@ subset_data <- function(
   stopifnot(length(ch) == 1, ch %in% c("1", "2", "3", "4", ""))
   type <- match.arg(type)
 
+  to_read <- glue::glue("{cinelge}{ch}Keras_{type}")
 
-  db <- targets::tar_read_raw(glue::glue("{cinelge}{ch}Keras_{type}"))
-
-  if (cinelge == "clinic") {
-    db[records, , drop = FALSE]
+  res <- if (cinelge == "clinic") {
+    targets::tar_read_raw(to_read)[records, , drop = FALSE]
   } else if (cinelge == "cine" && ch == 1) {
-    db[records, , , , , drop = FALSE]
+    targets::tar_read_raw(to_read)[records, , , , , drop = FALSE]
   } else if (cinelge == "lge" && ch != 1) {
-    db[records, , , drop = FALSE]
+    targets::tar_read_raw(to_read)[records, , , drop = FALSE]
   } else {
-    db[records, , , , drop = FALSE]
+    targets::tar_read_raw(to_read)[records, , , , drop = FALSE]
+  }
+
+  gc(FALSE)
+  res
+}
+
+subset__clinic <- function(db, records) db[records, , drop = FALSE]
+subset_s_cine <- function(db, records) db[records, , , , , drop = FALSE]
+subset_l_cine <- function(db, records) db[records, , , , drop = FALSE]
+subset_s_lge <- function(db, records) db[records, , , , drop = FALSE]
+subset_l_lge <- function(db, records) db[records, , , drop = FALSE]
+
+
+
+
+create_batch_generator <- function(batches_paths) {
+  # start iterator
+  i <- 1
+
+  # return an iterator function
+  function() {
+    # reset iterator if already seen all data
+    if (i > length(batches_paths)) i <<- 1
+
+    # return current batch
+    res <- qs::qread(
+      batches_paths[[i]],
+      nthreads = parallelly::availableCores("multicore", omit = 2)
+    )
+
+    i <<- i + 1
+    res
   }
 }
+
+

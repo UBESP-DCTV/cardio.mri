@@ -261,7 +261,63 @@ list(
   tar_target(predTestCovar, pred_keras(kerasCovarPath, "test")),
   tar_target(predTrainNoCovar, pred_keras(kerasNoCovarPath, "train")),
   tar_target(predValNoCovar, pred_keras(kerasNoCovarPath, "val")),
-  tar_target(predTestNoCovar, pred_keras(kerasNoCovarPath, "test"))
+  tar_target(predTestNoCovar, pred_keras(kerasNoCovarPath, "test")),
+
+  tar_target(
+    h0TrainCovar,
+    baseline_hazard(
+      predTrainCovar$time,
+      predTrainCovar$event,
+      predTrainCovar$risk_score
+    )
+  ),
+  tar_target(
+    h0ValCovar,
+    baseline_hazard(
+      predValCovar$time,
+      predValCovar$event,
+      predValCovar$risk_score
+    )
+  ),
+  tar_target(
+    h0TestCovar,
+    baseline_hazard(
+      predTestCovar$time,
+      predTestCovar$event,
+      predTestCovar$risk_score
+    )
+  ),
+  tar_target(
+    h0TrainNoCovar,
+    baseline_hazard(
+      predTrainNoCovar$time,
+      predTrainNoCovar$event,
+      predTrainNoCovar$risk_score
+    )
+  ),
+  tar_target(
+    h0ValNoCovar,
+    baseline_hazard(
+      predValNoCovar$time,
+      predValNoCovar$event,
+      predValNoCovar$risk_score
+    )
+  ),
+  tar_target(
+    h0TestNoCovar,
+    baseline_hazard(
+      predTestNoCovar$time,
+      predTestNoCovar$event,
+      predTestNoCovar$risk_score
+    )
+  ),
+
+  tar_target(hTrainCovar, hazard(predTrainCovar, h0TrainCovar)),
+  tar_target(hValCovar, hazard(predValCovar, h0ValCovar)),
+  tar_target(hTestCovar, hazard(predTestCovar, h0TestCovar)),
+  tar_target(hTrainNoCovar, hazard(predTrainNoCovar, h0TrainNoCovar)),
+  tar_target(hValNoCovar, hazard(predValNoCovar, h0ValNoCovar)),
+  tar_target(hTestNoCovar, hazard(predTestNoCovar, h0TestNoCovar))
 
 
 
