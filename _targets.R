@@ -317,9 +317,26 @@ list(
   tar_target(hTestCovar, hazard(predTestCovar, h0TestCovar)),
   tar_target(hTrainNoCovar, hazard(predTrainNoCovar, h0TrainNoCovar)),
   tar_target(hValNoCovar, hazard(predValNoCovar, h0ValNoCovar)),
-  tar_target(hTestNoCovar, hazard(predTestNoCovar, h0TestNoCovar))
+  tar_target(hTestNoCovar, hazard(predTestNoCovar, h0TestNoCovar)),
 
+tar_target(HarrellCTrainCovar, c_index(predTrainCovar)),
+tar_target(HarrellCValCovar, c_index(predValCovar)),
+tar_target(HarrellCTestCovar, c_index(predTestCovar)),
+tar_target(HarrellCTrainNoCovar, c_index(predTrainNoCovar)),
+tar_target(HarrellCValNoCovar, c_index(predValNoCovar)),
+tar_target(HarrellCTestNoCovar, c_index(predTestNoCovar)),
 
+tar_target(
+  HarrellCs,
+  c_indexs(list(
+    train_covar = HarrellCTrainCovar,
+    val_covar = HarrellCValCovar,
+    test_covar = HarrellCTestCovar,
+    train_nocovar = HarrellCTrainNoCovar,
+    val_nocovar = HarrellCValNoCovar,
+    test_nocovar = HarrellCTestNoCovar
+  ))
+)
 
 
 # Report ----------------------------------------------------------

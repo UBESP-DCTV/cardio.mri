@@ -52,5 +52,10 @@ hazard <- function(patient_risk, base_h) {
           s = exp(-h)
         ) |>
         dplyr::left_join(patient_risk, by = "record")
-  })
+    }) |>
+    dplyr::bind_rows(.id = "target_id") |>
+    dplyr::rename(
+      time = time.x,
+      event_time = time.y
+    )
 }
