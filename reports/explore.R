@@ -149,7 +149,14 @@ model %>%
       initial_epoch = ie,
       epochs = epochs,
       validation_data = vd,
-      validation_steps = vs
+      validation_steps = vs,
+      callbacks = list(
+        callback_model_checkpoint(
+          filepath = "models_epoch-{epoch:02d}_C_{val_C:.2f}.hdf5",
+          monitor = "val_C",
+          mode = "max"
+        )
+      )
     )
   (toc <- Sys.time() - tic)
 }

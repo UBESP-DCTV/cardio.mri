@@ -1,6 +1,6 @@
 c_index <- function(mri_pred) {
   Hmisc::rcorr.cens(
-    mri_pred[["risk_score"]],
+    exp(mri_pred[["risk_score"]]),
     survival::Surv(mri_pred[["time"]], mri_pred[["event"]])
   )
 }

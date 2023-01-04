@@ -319,25 +319,36 @@ list(
   tar_target(hValNoCovar, hazard(predValNoCovar, h0ValNoCovar)),
   tar_target(hTestNoCovar, hazard(predTestNoCovar, h0TestNoCovar)),
 
-tar_target(HarrellCTrainCovar, c_index(predTrainCovar)),
-tar_target(HarrellCValCovar, c_index(predValCovar)),
-tar_target(HarrellCTestCovar, c_index(predTestCovar)),
-tar_target(HarrellCTrainNoCovar, c_index(predTrainNoCovar)),
-tar_target(HarrellCValNoCovar, c_index(predValNoCovar)),
-tar_target(HarrellCTestNoCovar, c_index(predTestNoCovar)),
+  tar_target(HarrellCTrainCovar, c_index(predTrainCovar)),
+  tar_target(HarrellCValCovar, c_index(predValCovar)),
+  tar_target(HarrellCTestCovar, c_index(predTestCovar)),
+  tar_target(HarrellCTrainNoCovar, c_index(predTrainNoCovar)),
+  tar_target(HarrellCValNoCovar, c_index(predValNoCovar)),
+  tar_target(HarrellCTestNoCovar, c_index(predTestNoCovar)),
 
-tar_target(
-  HarrellCs,
-  c_indexs(list(
-    train_covar = HarrellCTrainCovar,
-    val_covar = HarrellCValCovar,
-    test_covar = HarrellCTestCovar,
-    train_nocovar = HarrellCTrainNoCovar,
-    val_nocovar = HarrellCValNoCovar,
-    test_nocovar = HarrellCTestNoCovar
-  ))
-)
+  tar_target(
+    HarrellCs,
+    c_indexs(list(
+      train_covar = HarrellCTrainCovar,
+      val_covar = HarrellCValCovar,
+      test_covar = HarrellCTestCovar,
+      train_nocovar = HarrellCTrainNoCovar,
+      val_nocovar = HarrellCValNoCovar,
+      test_nocovar = HarrellCTestNoCovar
+    ))
+  ),
 
+  tar_target(valRoc1Covar, cardio_roc(hValCovar, 12, "Validation")),
+  tar_target(valRoc2Covar, cardio_roc(hValCovar, 24, "Validation")),
+  tar_target(valRoc3Covar, cardio_roc(hValCovar, 36, "Validation")),
+  tar_target(valRoc5Covar, cardio_roc(hValCovar, 60, "Validation")),
+  tar_target(valRoc8Covar, cardio_roc(hValCovar, 96, "Validation")),
+
+  tar_target(testRoc1Covar, cardio_roc(hTestCovar, 12, "Test")),
+  tar_target(testRoc2Covar, cardio_roc(hTestCovar, 24, "Test")),
+  tar_target(testRoc3Covar, cardio_roc(hTestCovar, 36, "Test")),
+  tar_target(testRoc5Covar, cardio_roc(hTestCovar, 60, "Test")),
+  tar_target(testRoc8Covar, cardio_roc(hTestCovar, 96, "Test"))
 
 # Report ----------------------------------------------------------
 
