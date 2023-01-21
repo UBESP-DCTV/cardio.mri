@@ -253,15 +253,47 @@ list(
     format = "qs"
   ),
 
-  tar_file(kerasCovarPath, get_keras_model_path("covar")),
-  tar_file(kerasNoCovarPath, get_keras_model_path("no-covar")),
+  tar_files_input(kerasCovarPath, get_keras_model_path("covar")),
+  # tar_files_input(kerasNoCovarPath, get_keras_model_path("no-covar")),
 
-  tar_target(predTrainCovar, pred_keras(kerasCovarPath, "train")),
-  tar_target(predValCovar, pred_keras(kerasCovarPath, "val")),
-  tar_target(predTestCovar, pred_keras(kerasCovarPath, "test")),
-  tar_target(predTrainNoCovar, pred_keras(kerasNoCovarPath, "train")),
-  tar_target(predValNoCovar, pred_keras(kerasNoCovarPath, "val")),
-  tar_target(predTestNoCovar, pred_keras(kerasNoCovarPath, "test")),
+
+  tar_target(
+    predTrainCovar,
+    pred_keras(kerasCovarPath, "train"),
+    pattern = map(kerasCovarPath),
+    iteration = "list"
+  ),
+  tar_target(
+    predValCovar,
+    pred_keras(kerasCovarPath, "val"),
+    pattern = map(kerasCovarPath),
+    iteration = "list"
+  ),
+  tar_target(
+    predTestCovar,
+    pred_keras(kerasCovarPath, "test"),
+    pattern = map(kerasCovarPath),
+    iteration = "list"
+  ),
+  # tar_target(
+  #   predTrainNoCovar,
+  #   pred_keras(kerasNoCovarPath, "train"),
+  #   pattern = map(kerasNoCovarPath),
+  #   iteration = "list"
+  # ),
+  # tar_target(
+  #   predValNoCovar,
+  #   pred_keras(kerasNoCovarPath, "val"),
+  #   pattern = map(kerasNoCovarPath),
+  #   iteration = "list"
+  # ),
+  # tar_target(
+  #   predTestNoCovar,
+  #   pred_keras(kerasNoCovarPath, "test"),
+  #   pattern = map(kerasNoCovarPath),
+  #   iteration = "list"
+  # ),
+
 
   tar_target(
     h0TrainCovar,
@@ -269,7 +301,9 @@ list(
       predTrainCovar$time,
       predTrainCovar$event,
       predTrainCovar$risk_score
-    )
+    ),
+    pattern = map(predTrainCovar),
+    iteration = "list"
   ),
   tar_target(
     h0ValCovar,
@@ -277,7 +311,9 @@ list(
       predValCovar$time,
       predValCovar$event,
       predValCovar$risk_score
-    )
+    ),
+    pattern = map(predValCovar),
+    iteration = "list"
   ),
   tar_target(
     h0TestCovar,
@@ -285,70 +321,195 @@ list(
       predTestCovar$time,
       predTestCovar$event,
       predTestCovar$risk_score
-    )
+    ),
+    pattern = map(predTestCovar),
+    iteration = "list"
   ),
-  tar_target(
-    h0TrainNoCovar,
-    baseline_hazard(
-      predTrainNoCovar$time,
-      predTrainNoCovar$event,
-      predTrainNoCovar$risk_score
-    )
-  ),
-  tar_target(
-    h0ValNoCovar,
-    baseline_hazard(
-      predValNoCovar$time,
-      predValNoCovar$event,
-      predValNoCovar$risk_score
-    )
-  ),
-  tar_target(
-    h0TestNoCovar,
-    baseline_hazard(
-      predTestNoCovar$time,
-      predTestNoCovar$event,
-      predTestNoCovar$risk_score
-    )
-  ),
+  # tar_target(
+  #   h0TrainNoCovar,
+  #   baseline_hazard(
+  #     predTrainNoCovar$time,
+  #     predTrainNoCovar$event,
+  #     predTrainNoCovar$risk_score
+  #   ),
+  #   pattern = map(predTrainNoCovar),
+  #   iteration = "list"
+  # ),
+  # tar_target(
+  #   h0ValNoCovar,
+  #   baseline_hazard(
+  #     predValNoCovar$time,
+  #     predValNoCovar$event,
+  #     predValNoCovar$risk_score
+  #   ),
+  #   pattern = map(predValNoCovar),
+  #   iteration = "list"
+  # ),
+  # tar_target(
+  #   h0TestNoCovar,
+  #   baseline_hazard(
+  #     predTestNoCovar$time,
+  #     predTestNoCovar$event,
+  #     predTestNoCovar$risk_score
+  #   ),
+  #   pattern = map(predTestNoCovar),
+  #   iteration = "list"
+  # ),
 
-  tar_target(hTrainCovar, hazard(predTrainCovar, h0TrainCovar)),
-  tar_target(hValCovar, hazard(predValCovar, h0ValCovar)),
-  tar_target(hTestCovar, hazard(predTestCovar, h0TestCovar)),
-  tar_target(hTrainNoCovar, hazard(predTrainNoCovar, h0TrainNoCovar)),
-  tar_target(hValNoCovar, hazard(predValNoCovar, h0ValNoCovar)),
-  tar_target(hTestNoCovar, hazard(predTestNoCovar, h0TestNoCovar)),
+  tar_target(
+    hTrainCovar,
+    hazard(predTrainCovar, h0TrainCovar),
+    pattern = map(predTrainCovar, h0TrainCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    hValCovar,
+    hazard(predValCovar, h0ValCovar),
+    pattern = map(predValCovar, h0ValCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    hTestCovar,
+    hazard(predTestCovar, h0TestCovar),
+    pattern = map(predTestCovar, h0TestCovar),
+    iteration = "list"
+  ),
+  # tar_target(
+  #   hTrainNoCovar,
+  #   hazard(predTrainNoCovar, h0TrainNoCovar),
+  #   pattern = map(predTrainNoCovar, h0TrainNoCovar),
+  #   iteration = "list"
+  # ),
+  # tar_target(
+  #   hValNoCovar,
+  #   hazard(predValNoCovar, h0ValNoCovar),
+  #   pattern = map(predValNoCovar, h0ValNoCovar),
+  #   iteration = "list"
+  # ),
+  # tar_target(
+  #   hTestNoCovar,
+  #   hazard(predTestNoCovar, h0TestNoCovar),
+  #   pattern = map(predTestNoCovar, h0TestNoCovar),
+  #   iteration = "list"
+  # ),
 
-  tar_target(HarrellCTrainCovar, c_index(predTrainCovar)),
-  tar_target(HarrellCValCovar, c_index(predValCovar)),
-  tar_target(HarrellCTestCovar, c_index(predTestCovar)),
-  tar_target(HarrellCTrainNoCovar, c_index(predTrainNoCovar)),
-  tar_target(HarrellCValNoCovar, c_index(predValNoCovar)),
-  tar_target(HarrellCTestNoCovar, c_index(predTestNoCovar)),
+
+  tar_target(
+    HarrellCTrainCovar,
+    c_index(predTrainCovar),
+    pattern = map(predTrainCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    HarrellCValCovar,
+    c_index(predValCovar),
+    pattern = map(predValCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    HarrellCTestCovar,
+    c_index(predTestCovar),
+    pattern = map(predTestCovar),
+    iteration = "list"
+  ),
+  # tar_target(
+  #   HarrellCTrainNoCovar,
+  #   c_index(predTrainNoCovar),
+  #   pattern = map(predTrainNoCovar),
+  #   iteration = "list"
+  # ),
+  # tar_target(
+  #   HarrellCValNoCovar,
+  #   c_index(predValNoCovar),
+  #   pattern = map(predValNoCovar),
+  #   iteration = "list"
+  # ),
+  # tar_target(
+  #   HarrellCTestNoCovar,
+  #   c_index(predTestNoCovar),
+  #   pattern = map(predTestNoCovar),
+  #   iteration = "list"
+  # ),
+
 
   tar_target(
     HarrellCs,
     c_indexs(list(
       train_covar = HarrellCTrainCovar,
       val_covar = HarrellCValCovar,
-      test_covar = HarrellCTestCovar,
-      train_nocovar = HarrellCTrainNoCovar,
-      val_nocovar = HarrellCValNoCovar,
-      test_nocovar = HarrellCTestNoCovar
-    ))
+      test_covar = HarrellCTestCovar#,
+      # train_nocovar = HarrellCTrainNoCovar,
+      # val_nocovar = HarrellCValNoCovar,
+      # test_nocovar = HarrellCTestNoCovar
+    )),
+    pattern = map(
+      HarrellCTrainCovar, HarrellCValCovar, HarrellCTestCovar#,
+      # HarrellCTrainNoCovar, HarrellCValNoCovar, HarrellCTestNoCovar
+    ),
+    iteration = "list"
   ),
 
-  tar_target(valRoc1Covar, cardio_roc(hValCovar, 12, "Validation")),
-  tar_target(valRoc2Covar, cardio_roc(hValCovar, 24, "Validation")),
-  tar_target(valRoc3Covar, cardio_roc(hValCovar, 36, "Validation")),
-  tar_target(valRoc5Covar, cardio_roc(hValCovar, 60, "Validation")),
-  tar_target(valRoc8Covar, cardio_roc(hValCovar, 96, "Validation")),
+  tar_target(
+    valRoc1Covar,
+    cardio_roc(hValCovar, 12, "Validation"),
+    pattern = map(hValCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    valRoc2Covar,
+    cardio_roc(hValCovar, 24, "Validation"),
+    pattern = map(hValCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    valRoc3Covar,
+    cardio_roc(hValCovar, 36, "Validation"),
+    pattern = map(hValCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    valRoc5Covar,
+    cardio_roc(hValCovar, 60, "Validation"),
+    pattern = map(hValCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    valRoc8Covar,
+    cardio_roc(hValCovar, 96, "Validation"),
+    pattern = map(hValCovar),
+    iteration = "list"
+  ),
 
-  tar_target(testRoc1Covar, cardio_roc(hTestCovar, 12, "Test")),
-  tar_target(testRoc2Covar, cardio_roc(hTestCovar, 24, "Test")),
-  tar_target(testRoc3Covar, cardio_roc(hTestCovar, 36, "Test")),
-  tar_target(testRoc5Covar, cardio_roc(hTestCovar, 60, "Test")),
-  tar_target(testRoc8Covar, cardio_roc(hTestCovar, 96, "Test"))
+  tar_target(
+    testRoc1Covar,
+    cardio_roc(hTestCovar, 12, "Test"),
+    pattern = map(hTestCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    testRoc2Covar,
+    cardio_roc(hTestCovar, 24, "Test"),
+    pattern = map(hTestCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    testRoc3Covar,
+    cardio_roc(hTestCovar, 36, "Test"),
+    pattern = map(hTestCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    testRoc5Covar,
+    cardio_roc(hTestCovar, 60, "Test"),
+    pattern = map(hTestCovar),
+    iteration = "list"
+  ),
+  tar_target(
+    testRoc8Covar,
+    cardio_roc(hTestCovar, 96, "Test"),
+    pattern = map(hTestCovar),
+    iteration = "list"
+  )
 
 # Report ----------------------------------------------------------
 
