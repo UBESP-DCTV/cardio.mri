@@ -43,8 +43,15 @@ if (Sys.getenv("PRJ_SHARED_PATH") == "") {
   Sys.setenv(PRJ_SHARED_PATH = normalizePath(here::here()))
 }
 
+Sys.setenv(
+  "PRJ_SHARED_PATH" = path.expand(Sys.getenv("PRJ_SHARED_PATH"))
+)
 
-.get_prj_shared_path <- function() Sys.getenv('PRJ_SHARED_PATH')
+.get_prj_shared_path <- function() {
+  Sys.getenv('PRJ_SHARED_PATH') |>
+    normalizePath(winslash = "/", mustWork = FALSE)
+}
+
 
 if (!(fs::is_dir(.get_prj_shared_path()))) {
   usethis::ui_stop("

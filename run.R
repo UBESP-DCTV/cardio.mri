@@ -1,3 +1,6 @@
+#! /usr/local/bin r
+
+#
 # To view your current pipeline status, and possibly run/update it,
 # you can simply source/execute this script (maybe using the
 # `dev/03-run_cycle.R` script)

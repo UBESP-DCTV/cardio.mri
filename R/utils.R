@@ -57,3 +57,5 @@ optimal_n_cores <- function(available_cores) {
   nearest_power_2 <- trunc(log2(max_usable))
   2^nearest_power_2
 }
+
+`%||%` <- function(x, y) if (is.null(x)) y else x

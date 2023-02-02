@@ -98,22 +98,22 @@ read_short_cine <- function(mri_path, mri_info) {
   res <- magick::image_read_video(mri_path, fps = NULL) |>
     video_to_4dint(t_max, s_tot, mri_path)
   dimnames(res) <- list(
-    row = NULL, col = NULL, time = NULL, slice = NULL
+    time = NULL, row = NULL, col = NULL, slice = NULL
     )
   res
 }
 
 read_short_lge <- function(mri_path) {
   res <- magick::image_read_video(mri_path, fps = NULL) |>
-    video_to_3dint()
+    video_to_3dint(lge = TRUE)
   dimnames(res) <- list(row = NULL, col = NULL, slice = NULL)
   res
 }
 
 read_long_cine <- function(mri_path) {
   res <- magick::image_read_video(mri_path, fps = NULL) |>
-    video_to_3dint()
-  dimnames(res) <- list(row = NULL, col = NULL, time = NULL)
+    video_to_3dint(lge = FALSE)
+  dimnames(res) <- list(time = NULL, row = NULL, col = NULL)
   res
 }
 
@@ -127,30 +127,36 @@ video_to_4dint <- function(avi, t_max, s_tot, path = NULL) {
   starts <- which(seq_len(n_frames) %% t_max == 1)
   if (length(starts) != s_tot) usethis::ui_stop("
     Desequencing error for file {path}.
-    Possible issues in t_max/s_tot. I.e. t_max * s_tot is different from the number of frames in the video.
+    Possible issues in t_max/s_tot.
+    I.e. t_max * s_tot is different from the number of frames
+         in the video.
   ")
 
   res <- starts |>
     purrr::map(~ {
-      avi[.x + seq_len(t_max) -1L] |>
-        video_to_3dint()
+      avi[.x + seq_len(t_max) - 1L] |>
+        video_to_3dint(lge = FALSE)
     }) |>
     abind::abind(along = 4)
 
   d_seq <- dim(res)
-  stopifnot((t_max + s_tot) == sum(d_seq[3:4]))
-  dim(res) <- c(d_seq[[1]], d_seq[[2]], t_max, s_tot)
+  stopifnot((t_max + s_tot) == sum(d_seq[c(1, 4)]))
+  dim(res) <- c(t_max, d_seq[[2]], d_seq[[3]], s_tot)
   dimnames(res) <- list(
-    row = NULL, col = NULL, dept = NULL, hyper = NULL
+    time = NULL, row = NULL, col = NULL, slice = NULL
   )
   res
 }
 
-video_to_3dint <- function(avi) {
+video_to_3dint <- function(avi, lge = TRUE) {
   res <- seq_along(avi) |>
     purrr::map(~ avi[[.x]] |> gray3draw_to_gray2dint()) |>
-    abind::abind(along = 3)
-  dimnames(res) <- list(row = NULL, col = NULL, depth = NULL)
+    abind::abind(along = 0.5 + 2.5 * lge)
+  if (lge) {
+    dimnames(res) <- list(row = NULL, col = NULL, slice = NULL)
+  } else {
+    dimnames(res) <- list(time = NULL, row = NULL, col = NULL)
+  }
   res
 }
 
