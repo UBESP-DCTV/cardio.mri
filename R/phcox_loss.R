@@ -78,7 +78,7 @@ coxph_loss <- function(
   # logsumexp_masked -----------------------------------
 
   # rr <- logsumexp_masked(pred_t, riskset, axis = 1L, keepdims = TRUE)
-  tf$math$multiply(event, rr - predictions) + 1e-7
+  tf$math$multiply(event, tf$abs(rr - predictions)) + 1e-7
 }
 
 

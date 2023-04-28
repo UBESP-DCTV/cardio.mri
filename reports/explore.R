@@ -4,7 +4,7 @@ list.files(here::here("R"), pattern = "\\.R$", full.names = TRUE) |>
 on_cpu <- TRUE
 debug <- FALSE
 with_clinic <- TRUE
-continue <- TRUE
+continue <- FALSE
 trainval <- TRUE
 modelpath <- get_keras_model_path("covar")[[20]]
 nepoch <- 30  # last trained one!
@@ -154,7 +154,8 @@ model %>%
         callback_model_checkpoint(
           filepath = "models_epoch-{epoch:02d}_C_{val_C:.2f}.hdf5",
           monitor = "val_C",
-          mode = "max"
+          mode = "max",
+          save_best_only = TRUE
         )
       )
     )
@@ -163,9 +164,6 @@ model %>%
 
 readr::write_rds(toc, glue::glue("{run_id}_tictoc_model.rds"))
 readr::write_rds(history, glue::glue("{run_id}_history.rds"))
-keras::save_model_hdf5(model, glue::glue("{run_id}_model.hdf5"))
-keras::serialize_model(model) |>
-  readr::write_rds(glue::glue("{run_id}_serialized_model.rds"))
 
 
 
