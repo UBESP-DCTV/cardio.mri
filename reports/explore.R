@@ -6,10 +6,10 @@ debug <- FALSE
 with_clinic <- TRUE
 continue <- TRUE
 trainval <- TRUE
-modelpath <- get_keras_model_path("covar")[[16]]
-nepoch <- 26
+modelpath <- get_keras_model_path("covar")[[20]]
+nepoch <- 31
 
-epochs <- nepoch + 4
+epochs <- nepoch + 9
 
 batch_size_train <- 6
 batch_size_val <- 6

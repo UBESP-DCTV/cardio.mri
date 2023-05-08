@@ -74,3 +74,25 @@ run_20230109184404-32x6gte4events-CONTINUE_from_15-25_epochs_history.rds
 run_20230109184404-32x6gte4events-CONTINUE_from_15-25_epochs_serialized_model.rds
 
 run_20230109184404-32x6gte4events-CONTINUE_from_15-25_epochs_tictoc_model.rds
+
+review_hTestCovar_epoch30.csv
+
+review_testRoc1Covar.jpg
+
+review_testRoc2Covar.jpg
+
+review_testRoc3Covar.jpg
+
+review_testRoc5Covar.jpg
+
+review_testRoc8Covar.jpg
+
+review_valRoc1Covar.jpg
+
+review_valRoc2Covar.jpg
+
+review_valRoc3Covar.jpg
+
+review_valRoc5Covar.jpg
+
+review_valRoc8Covar.jpg

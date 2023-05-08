@@ -12,5 +12,5 @@ c(
 ) |>
   purrr::set_names() |>
   purrr::map(tar_read_raw) |>
-  purrr::iwalk(~ggplot2::ggsave(paste0(.y, ".jpg"), .x, width = 16, height = 9))
+  purrr::iwalk(~ggplot2::ggsave(paste0("review_", .y, ".jpg"), .x[[20]], width = 16, height = 9))
 

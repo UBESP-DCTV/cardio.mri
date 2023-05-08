@@ -4,7 +4,7 @@ cardio_roc <- function(h, t = 60, set) {
     dplyr::group_by(target_id) |>
     dplyr::filter(time == max(time)) |>
     dplyr::ungroup() |>
-    dplyr::mutate(current_event = event & (event_time >= time))
+    dplyr::mutate(current_event = event & (event_time <= time))
 
   rocobj <- pROC::roc(aux$current_event, aux$h)
   auc <- round(pROC::auc(aux$current_event, aux$h), 4)
